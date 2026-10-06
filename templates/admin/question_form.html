@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Question - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10 space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Add Question to Question Bank</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Enter full question specifications, 4 options, verified answer key, and step-by-step explanation.</p>
+        </div>
+        <a href="{{ url_for('admin_questions') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+            Cancel & Back
+        </a>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_question') }}" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-5 text-xs font-semibold text-slate-700">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="block mb-1">Subject</label>
+                <select name="subject_id" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block mb-1">Tier Classification</label>
+                <select name="tier" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+                    <option value="Tier-I">Tier-I</option>
+                    <option value="Tier-II">Tier-II</option>
+                    <option value="Both">Both Tiers</option>
+                </select>
+            </div>
+            <div>
+                <label class="block mb-1">Difficulty Level</label>
+                <select name="difficulty" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+                    <option value="Easy">Easy</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block mb-1">Question Statement / Text</label>
+            <textarea name="question_text" rows="3" required placeholder="Type question text..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- 4 Options -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block mb-1">Option A</label>
+                <input type="text" name="option_a" required placeholder="Option A text" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+            </div>
+            <div>
+                <label class="block mb-1">Option B</label>
+                <input type="text" name="option_b" required placeholder="Option B text" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+            </div>
+            <div>
+                <label class="block mb-1">Option C</label>
+                <input type="text" name="option_c" required placeholder="Option C text" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+            </div>
+            <div>
+                <label class="block mb-1">Option D</label>
+                <input type="text" name="option_d" required placeholder="Option D text" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+            </div>
+        </div>
+
+        <!-- Correct Option -->
+        <div>
+            <label class="block mb-1">Official Correct Answer Key</label>
+            <select name="correct_option" class="w-full max-w-xs p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-emerald-700">
+                <option value="A">Option A</option>
+                <option value="B">Option B</option>
+                <option value="C">Option C</option>
+                <option value="D">Option D</option>
+            </select>
+        </div>
+
+        <!-- Explanation & Shortcut -->
+        <div>
+            <label class="block mb-1">Step-by-Step Explanation / Solution</label>
+            <textarea name="explanation" rows="3" required placeholder="Detailed solution and reason..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div>
+            <label class="block mb-1">Shortcut Trick / Quick Method (Optional)</label>
+            <input type="text" name="shortcut" placeholder="e.g. If x + 1/x = k, x² + 1/x² = k² - 2" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-colors">
+            Save Question to Database
+        </button>
+    </form>
+</div>
+{% endblock %}

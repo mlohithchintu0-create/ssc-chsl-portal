@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Control Center - SSC CHSL 2026 Portal{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900 text-white py-8 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-950">System Administration</span>
+                <h1 class="text-2xl font-extrabold tracking-tight mt-1 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i> Admin Control Center
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5">Manage question banks, import bulk questions via CSV/JSON, and monitor student test performance.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('admin_add_question') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Add Question
+                </a>
+                <a href="{{ url_for('admin_import_questions') }}" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-import"></i> Bulk Import
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Quick Statistics -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Questions</span>
+            <div class="text-2xl font-extrabold text-blue-700 mt-1">{{ total_q }}</div>
+            <a href="{{ url_for('admin_questions') }}" class="text-[10px] text-blue-600 underline font-semibold">Manage Bank</a>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Mock Tests</span>
+            <div class="text-2xl font-extrabold text-purple-700 mt-1">{{ total_mocks }}</div>
+            <span class="text-[10px] text-slate-500">Tier-I & Tier-II</span>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Registered Users</span>
+            <div class="text-2xl font-extrabold text-emerald-600 mt-1">{{ total_users }}</div>
+            <span class="text-[10px] text-slate-500">Aspirants</span>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Completed Tests</span>
+            <div class="text-2xl font-extrabold text-slate-900 mt-1">{{ total_attempts }}</div>
+            <span class="text-[10px] text-slate-500">Mock Submissions</span>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Pending Reports</span>
+            <div class="text-2xl font-extrabold text-rose-600 mt-1">{{ pending_reports }}</div>
+            <a href="{{ url_for('admin_reports') }}" class="text-[10px] text-rose-600 underline font-semibold">Review Reports</a>
+        </div>
+    </div>
+
+    <!-- Recent Candidate Test Activity -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-users text-blue-600"></i> Recent Candidate Test Attempts
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-3">Candidate</th>
+                        <th class="py-2.5 px-3">Mock Test</th>
+                        <th class="py-2.5 px-3 text-center">Score</th>
+                        <th class="py-2.5 px-3 text-center">Accuracy</th>
+                        <th class="py-2.5 px-3 text-center">Correct / Wrong</th>
+                        <th class="py-2.5 px-3 text-right">Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for a in recent_attempts %}
+                    <tr>
+                        <td class="py-3 px-3 font-bold text-slate-900">{{ a.full_name }}</td>
+                        <td class="py-3 px-3 text-slate-700">{{ a.test_title }}</td>
+                        <td class="py-3 px-3 text-center font-bold text-blue-700">{{ a.final_score }}</td>
+                        <td class="py-3 px-3 text-center font-bold text-emerald-600">{{ a.accuracy }}%</td>
+                        <td class="py-3 px-3 text-center">{{ a.correct_answers }} / {{ a.wrong_answers }}</td>
+                        <td class="py-3 px-3 text-right text-slate-400">{{ a.end_time|datetimeformat }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Bookmarked Questions - Saved for Revision{% endblock %}
+
+{% block content %}
+<div class="bg-white border-b border-slate-200 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-bookmark text-amber-500"></i> Saved Bookmarks for Revision
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">Review questions you previously flagged as difficult or important.</p>
+            </div>
+            <a href="{{ url_for('practice') }}" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors">
+                Back to Practice &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    {% if bookmarks %}
+        {% for q in bookmarks %}
+        <div id="bm-box-{{ q.id }}" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="font-extrabold px-2 py-0.5 rounded bg-slate-100 text-slate-800">Q #{{ q.id }}</span>
+                    <span class="font-bold text-slate-700">{{ q.subject_name }}</span>
+                    <span class="text-slate-400">({{ q.tier }})</span>
+                </div>
+                <button type="button" onclick="removeBookmark({{ q.id }})" class="text-rose-500 hover:text-rose-700 font-semibold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Remove
+                </button>
+            </div>
+
+            <div class="text-sm font-bold text-slate-900 leading-relaxed whitespace-pre-line">
+                {{ q.question_text }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 {% if q.correct_option == 'A' %}border-emerald-500 bg-emerald-50 text-emerald-950 font-bold{% endif %}"><strong>A.</strong> {{ q.option_a }}</div>
+                <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 {% if q.correct_option == 'B' %}border-emerald-500 bg-emerald-50 text-emerald-950 font-bold{% endif %}"><strong>B.</strong> {{ q.option_b }}</div>
+                <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 {% if q.correct_option == 'C' %}border-emerald-500 bg-emerald-50 text-emerald-950 font-bold{% endif %}"><strong>C.</strong> {{ q.option_c }}</div>
+                <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 {% if q.correct_option == 'D' %}border-emerald-500 bg-emerald-50 text-emerald-950 font-bold{% endif %}"><strong>D.</strong> {{ q.option_d }}</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+                <strong class="text-emerald-700 block font-bold">Correct Answer: Option {{ q.correct_option }}</strong>
+                <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ q.explanation }}</p>
+                {% if q.shortcut %}
+                <div class="mt-2 text-indigo-700 font-semibold bg-indigo-50 p-2 rounded">
+                    Shortcut: {{ q.shortcut }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 space-y-3">
+            <i class="fa-regular fa-bookmark text-4xl text-slate-300"></i>
+            <h3 class="font-bold text-slate-800 text-base">No Saved Bookmarks Yet</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Click the bookmark icon on any question in practice mode or mock tests to save it here for revision.</p>
+            <a href="{{ url_for('practice') }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold">Go to Practice Arena</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function removeBookmark(qId) {
+    fetch('/api/bookmark/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question_id: qId})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const el = document.getElementById(`bm-box-${qId}`);
+            if (el) el.remove();
+        }
+    });
+}
+</script>
+{% endblock %}

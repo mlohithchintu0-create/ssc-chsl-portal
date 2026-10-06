@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ material.title }} - SSC CHSL Study Notes{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-slate-900 to-blue-950 text-white py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="{{ url_for('study_material') }}" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 mb-3">
+            <i class="fa-solid fa-arrow-left"></i> Back to All Study Materials
+        </a>
+        <span class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-800 text-blue-200 border border-blue-700">
+            {{ material.category }} &bull; {{ material.subject_name }}
+        </span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">{{ material.title }}</h1>
+        <p class="text-xs text-slate-300 mt-1">{{ material.summary }}</p>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+        <div class="prose max-w-none text-slate-800 text-sm leading-relaxed whitespace-pre-line font-medium">
+            {{ material.content }}
+        </div>
+
+        <div class="pt-6 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400">Tagged: <strong>{{ material.tags }}</strong></span>
+            <a href="{{ url_for('practice', subject=material.subject_name) }}" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">
+                Practice {{ material.subject_name }} Questions &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

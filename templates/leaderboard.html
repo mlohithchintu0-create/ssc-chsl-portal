@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}All-India Mock Test Leaderboard - SSC CHSL Aspirants{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-amber-600 to-yellow-600 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-white/20 text-white border border-white/30">
+                    <i class="fa-solid fa-trophy mr-1 text-amber-200"></i> Competitive Rankings
+                </span>
+                <h1 class="text-3xl font-extrabold tracking-tight mt-2">All-India Aspirant Leaderboard</h1>
+                <p class="text-sm text-amber-100 mt-1">Compete in full-length mock tests and measure your rank against peers across India.</p>
+            </div>
+            <a href="{{ url_for('mock_tests') }}" class="px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-extrabold hover:bg-slate-800 transition-colors shadow-lg">
+                <i class="fa-solid fa-play mr-1 text-amber-400"></i> Take Full Mock Test
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+            <h2 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                <i class="fa-solid fa-medal text-amber-500"></i> Top Ranking Aspirants (Tier-I & Tier-II Combined)
+            </h2>
+            <span class="text-xs text-slate-400 font-medium">Updated in real-time</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4 text-center">Rank</th>
+                        <th class="py-3 px-4">Aspirant Name</th>
+                        <th class="py-3 px-4 text-center">Highest Score</th>
+                        <th class="py-3 px-4 text-center">Accuracy</th>
+                        <th class="py-3 px-4 text-center">Tests Taken</th>
+                        <th class="py-3 px-4 text-center">Daily Streak</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for l in leaders %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 text-center">
+                            {% if loop.index == 1 %}
+                                <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-extrabold inline-flex items-center justify-center text-xs shadow-sm">1</span>
+                            {% elif loop.index == 2 %}
+                                <span class="w-7 h-7 rounded-full bg-slate-300 text-slate-800 font-extrabold inline-flex items-center justify-center text-xs shadow-sm">2</span>
+                            {% elif loop.index == 3 %}
+                                <span class="w-7 h-7 rounded-full bg-amber-700 text-white font-extrabold inline-flex items-center justify-center text-xs shadow-sm">3</span>
+                            {% else %}
+                                <span class="font-bold text-slate-500">{{ loop.index }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                                    {{ l.full_name[0] }}
+                                </span>
+                                <div>
+                                    <div class="font-bold text-slate-900">{{ l.full_name }}</div>
+                                    <div class="text-[10px] text-slate-400">@{{ l.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-extrabold text-blue-700 text-sm">
+                            {{ l.highest_score }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold text-emerald-600">
+                            {{ l.avg_accuracy|round(1) }}%
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-semibold text-slate-700">
+                            {{ l.tests_completed }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="inline-flex items-center gap-1 font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px]">
+                                <i class="fa-solid fa-fire text-amber-500"></i> {{ l.streak }}d
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

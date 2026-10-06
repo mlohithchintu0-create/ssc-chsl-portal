@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ attempt.title }} - Official Exam Engine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; user-select: none; }
+        .palette-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        /* TCS Palette Color Standards */
+        .status-not-visited { background-color: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+        .status-not-answered { background-color: #ef4444; color: #ffffff; border: 1px solid #dc2626; clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%); }
+        .status-answered { background-color: #10b981; color: #ffffff; border: 1px solid #059669; clip-path: polygon(50% 0, 100% 25%, 100% 100%, 0 100%, 0 25%); }
+        .status-review { background-color: #8b5cf6; color: #ffffff; border-radius: 50% !important; border: 1px solid #7c3aed; }
+        .status-answered-review { background-color: #8b5cf6; color: #ffffff; border-radius: 50% !important; border: 2px solid #10b981; position: relative; }
+        .status-answered-review::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background-color: #10b981;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- Official Top Exam Header -->
+    <header class="bg-slate-900 text-white px-4 py-2.5 flex justify-between items-center shrink-0 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+            <span class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-sm text-white">
+                SSC
+            </span>
+            <div>
+                <h1 class="text-sm font-bold text-white leading-tight truncate max-w-md">{{ attempt.title }}</h1>
+                <div class="text-[11px] text-slate-400">Candidate: <strong class="text-slate-200">{{ session.full_name }}</strong> (Roll: CHSL26-{{ session.user_id }}890)</div>
+            </div>
+        </div>
+
+        <!-- Timer & Controls -->
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-700 flex items-center space-x-2">
+                <i class="fa-regular fa-clock text-amber-400 text-sm"></i>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold leading-none">Time Remaining</span>
+                    <span id="exam-timer" class="text-base font-extrabold text-amber-300 font-mono">00:00:00</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="confirmSubmitModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Submit Test</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Section Switcher Bar -->
+    <div class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shrink-0 overflow-x-auto">
+        <div class="flex items-center space-x-2 text-xs">
+            <span class="font-bold text-slate-400 uppercase text-[10px] mr-1">Sections:</span>
+            {% for sec_name, sec_qs in sections.items() %}
+            <button type="button" 
+                    onclick="switchSection('{{ sec_name }}')" 
+                    id="sec-tab-{{ loop.index }}"
+                    class="sec-tab px-3 py-1.5 rounded-lg font-bold border transition-all whitespace-nowrap {% if loop.first %}bg-blue-600 text-white border-blue-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}"
+                    data-section="{{ sec_name }}"
+                    data-first-q="{{ sec_qs[0].order_num }}">
+                {{ sec_name }} ({{ sec_qs|length }})
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="hidden sm:flex items-center space-x-3 text-xs text-slate-500 font-medium">
+            <span>Marking: <strong class="text-emerald-600">+{{ attempt.marks_per_question }}</strong> / <strong class="text-rose-600">-{{ attempt.negative_marks }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Main Workspace (Split View) -->
+    <div class="flex-grow flex overflow-hidden">
+        
+        <!-- Left Panel: Question Workspace (75%) -->
+        <div class="flex-grow flex flex-col bg-white overflow-hidden border-r border-slate-200">
+            
+            <!-- Question Question Header -->
+            <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between items-center shrink-0 text-xs">
+                <div class="flex items-center space-x-3">
+                    <span class="font-extrabold text-slate-900 text-sm">Question <span id="current-q-num">1</span> of {{ questions|length }}</span>
+                    <span id="current-q-subject" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[11px]"></span>
+                    <span id="current-q-section" class="text-slate-500 font-semibold hidden md:inline"></span>
+                </div>
+                <div class="flex items-center space-x-2 text-xs">
+                    <span class="text-slate-400">Marks: +{{ attempt.marks_per_question }}, -{{ attempt.negative_marks }}</span>
+                </div>
+            </div>
+
+            <!-- Question Scrollable Body -->
+            <div class="flex-grow p-6 overflow-y-auto space-y-6">
+                <!-- Question Text -->
+                <div id="q-text-display" class="text-base text-slate-900 font-semibold leading-relaxed whitespace-pre-line">
+                    Loading question...
+                </div>
+
+                <!-- 4 Radio Options -->
+                <div class="space-y-3 pt-2" id="options-form">
+                    {% for opt_key in ['A', 'B', 'C', 'D'] %}
+                    <label id="label-opt-{{ opt_key }}" onclick="selectOption('{{ opt_key }}')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all flex items-start gap-3 cursor-pointer text-sm font-medium text-slate-800">
+                        <input type="radio" name="opt_choice" value="{{ opt_key }}" id="radio-{{ opt_key }}" class="mt-1 text-blue-600 focus:ring-blue-500">
+                        <span class="w-6 h-6 rounded-md bg-white border border-slate-300 font-bold text-slate-700 flex items-center justify-center shrink-0 text-xs">
+                            {{ opt_key }}
+                        </span>
+                        <span id="text-opt-{{ opt_key }}" class="pt-0.5 leading-normal"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Bottom Question Action Bar -->
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-3 shrink-0">
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="markForReview()" class="px-4 py-2 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold text-xs transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-bookmark text-xs"></i> Mark for Review & Next
+                    </button>
+                    <button type="button" onclick="clearResponse()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors">
+                        Clear Response
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="prevQuestion()" id="btn-prev" class="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors">
+                        &larr; Previous
+                    </button>
+                    <button type="button" onclick="saveAndNext()" id="btn-save-next" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors">
+                        Save & Next &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Question Palette & Legend (25%) -->
+        <div class="w-80 lg:w-96 bg-white flex flex-col shrink-0 overflow-hidden">
+            
+            <!-- Candidate Profile Snippet -->
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center space-x-3 shrink-0">
+                <div class="w-10 h-10 rounded-full bg-ssc-900 text-white flex items-center justify-center font-bold text-sm">
+                    {{ session.full_name[0] }}
+                </div>
+                <div class="text-xs">
+                    <div class="font-bold text-slate-800">{{ session.full_name }}</div>
+                    <div class="text-slate-400 text-[10px]">Tier-{{ attempt.tier }} Candidate</div>
+                </div>
+            </div>
+
+            <!-- TCS Standard Palette Legend -->
+            <div class="p-3 bg-white border-b border-slate-200 text-[10px] grid grid-cols-2 gap-2 shrink-0">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-emerald-500 text-white flex items-center justify-center font-bold text-[9px]" id="count-answered">0</span>
+                    <span class="text-slate-600">Answered</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center font-bold text-[9px]" id="count-not-answered">0</span>
+                    <span class="text-slate-600">Not Answered</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-slate-200 text-slate-600 border border-slate-300 flex items-center justify-center font-bold text-[9px]" id="count-not-visited">0</span>
+                    <span class="text-slate-600">Not Visited</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[9px]" id="count-review">0</span>
+                    <span class="text-slate-600">Marked for Review</span>
+                </div>
+            </div>
+
+            <!-- Scrollable Palette Numbers (1 to 100 or 1 to 135) -->
+            <div class="flex-grow p-4 overflow-y-auto">
+                <div class="text-xs font-bold text-slate-700 mb-2">Question Palette:</div>
+                <div class="grid grid-cols-5 gap-2" id="palette-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Final Submit CTA in Sidebar -->
+            <div class="p-3 bg-slate-50 border-t border-slate-200 shrink-0">
+                <button type="button" onclick="confirmSubmitModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>Submit & View Scorecard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Modal -->
+    <div id="submit-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-900">Confirm Exam Submission</h3>
+                <p class="text-xs text-slate-500">Please review your examination attempt summary before submitting your test.</p>
+            </div>
+
+            <!-- Summary Table -->
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between">
+                    <span class="text-slate-500 font-medium">Total Questions:</span>
+                    <strong class="text-slate-900" id="modal-total-q">{{ questions|length }}</strong>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between">
+                    <span class="text-emerald-700 font-medium">Answered:</span>
+                    <strong class="text-emerald-800" id="modal-answered-q">0</strong>
+                </div>
+                <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 flex justify-between">
+                    <span class="text-rose-700 font-medium">Not Answered:</span>
+                    <strong class="text-rose-800" id="modal-not-answered-q">0</strong>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-xl border border-purple-100 flex justify-between">
+                    <span class="text-purple-700 font-medium">Marked for Review:</span>
+                    <strong class="text-purple-800" id="modal-review-q">0</strong>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button type="button" onclick="closeSubmitModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+                    Back to Test
+                </button>
+                <form action="{{ url_for('submit_mock_test', attempt_id=attempt.id) }}" method="POST" class="flex-1">
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-colors">
+                        Confirm & Final Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Engine Script -->
+    <script>
+        // Questions Database passed from Flask
+        const rawQuestions = [
+            {% for q in questions %}
+            {
+                id: {{ q.id }},
+                orderNum: {{ q.order_num }},
+                sectionName: "{{ q.section_name }}",
+                subjectName: "{{ q.subject_name }}",
+                subjectCode: "{{ q.subject_code }}",
+                text: {{ q.question_text|tojson }},
+                optionA: {{ q.option_a|tojson }},
+                optionB: {{ q.option_b|tojson }},
+                optionC: {{ q.option_c|tojson }},
+                optionD: {{ q.option_d|tojson }},
+                selectedOption: {% if q.selected_option %}"{{ q.selected_option }}"{% else %}null{% endif %},
+                isMarkedReview: {{ q.is_marked_for_review }},
+                visited: {% if q.selected_option or q.is_marked_for_review %}true{% else %}false{% endif %}
+            },
+            {% endfor %}
+        ];
+
+        let currentIndex = 0; // 0-indexed
+        let remainingSeconds = {{ remaining_sec }};
+        const attemptId = {{ attempt.id }};
+
+        // Render Question Palette
+        function initPalette() {
+            const grid = document.getElementById('palette-grid');
+            grid.innerHTML = '';
+            rawQuestions.forEach((q, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `palette-btn-${idx}`;
+                btn.className = `palette-btn ${getPaletteClass(q)}`;
+                btn.textContent = q.orderNum;
+                btn.onclick = () => loadQuestion(idx);
+                grid.appendChild(btn);
+            });
+            updateSummaryCounts();
+        }
+
+        function getPaletteClass(q) {
+            if (q.selectedOption && q.isMarkedReview) return 'status-answered-review';
+            if (q.isMarkedReview) return 'status-review';
+            if (q.selectedOption) return 'status-answered';
+            if (q.visited) return 'status-not-answered';
+            return 'status-not-visited';
+        }
+
+        function updateSummaryCounts() {
+            let answered = 0, notAnswered = 0, notVisited = 0, review = 0;
+            rawQuestions.forEach(q => {
+                if (q.selectedOption && q.isMarkedReview) { answered++; review++; }
+                else if (q.isMarkedReview) review++;
+                else if (q.selectedOption) answered++;
+                else if (q.visited) notAnswered++;
+                else notVisited++;
+            });
+
+            document.getElementById('count-answered').textContent = answered;
+            document.getElementById('count-not-answered').textContent = notAnswered;
+            document.getElementById('count-not-visited').textContent = notVisited;
+            document.getElementById('count-review').textContent = review;
+
+            // Modal counts
+            document.getElementById('modal-answered-q').textContent = answered;
+            document.getElementById('modal-not-answered-q').textContent = notAnswered;
+            document.getElementById('modal-review-q').textContent = review;
+        }
+
+        // Load specific question into view
+        function loadQuestion(idx) {
+            currentIndex = idx;
+            const q = rawQuestions[idx];
+            q.visited = true;
+
+            document.getElementById('current-q-num').textContent = q.orderNum;
+            document.getElementById('current-q-subject').textContent = q.subjectName;
+            document.getElementById('current-q-section').textContent = q.sectionName;
+            document.getElementById('q-text-display').textContent = q.text;
+
+            document.getElementById('text-opt-A').textContent = q.optionA;
+            document.getElementById('text-opt-B').textContent = q.optionB;
+            document.getElementById('text-opt-C').textContent = q.optionC;
+            document.getElementById('text-opt-D').textContent = q.optionD;
+
+            // Clear radios and restore current answer
+            document.querySelectorAll('input[name="opt_choice"]').forEach(r => r.checked = false);
+            ['A', 'B', 'C', 'D'].forEach(k => {
+                document.getElementById(`label-opt-${k}`).classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-900');
+                document.getElementById(`label-opt-${k}`).classList.add('bg-slate-50', 'border-slate-200');
+            });
+
+            if (q.selectedOption) {
+                const radio = document.getElementById(`radio-${q.selectedOption}`);
+                if (radio) radio.checked = true;
+                const label = document.getElementById(`label-opt-${q.selectedOption}`);
+                if (label) {
+                    label.classList.remove('bg-slate-50', 'border-slate-200');
+                    label.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-900');
+                }
+            }
+
+            // Update palette button styling
+            const btn = document.getElementById(`palette-btn-${idx}`);
+            if (btn) btn.className = `palette-btn ${getPaletteClass(q)}`;
+            updateSummaryCounts();
+            highlightActiveSection(q.sectionName);
+        }
+
+        function selectOption(key) {
+            const q = rawQuestions[currentIndex];
+            q.selectedOption = key;
+            loadQuestion(currentIndex);
+            saveAnswerAsync();
+        }
+
+        function clearResponse() {
+            const q = rawQuestions[currentIndex];
+            q.selectedOption = null;
+            loadQuestion(currentIndex);
+            saveAnswerAsync();
+        }
+
+        function markForReview() {
+            const q = rawQuestions[currentIndex];
+            q.isMarkedReview = 1;
+            saveAnswerAsync();
+            if (currentIndex < rawQuestions.length - 1) {
+                loadQuestion(currentIndex + 1);
+            }
+        }
+
+        function saveAndNext() {
+            const q = rawQuestions[currentIndex];
+            q.isMarkedReview = 0;
+            saveAnswerAsync();
+            if (currentIndex < rawQuestions.length - 1) {
+                loadQuestion(currentIndex + 1);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                loadQuestion(currentIndex - 1);
+            }
+        }
+
+        // Section switcher tabs
+        function switchSection(secName) {
+            const firstIdx = rawQuestions.findIndex(q => q.sectionName === secName);
+            if (firstIdx !== -1) {
+                loadQuestion(firstIdx);
+            }
+        }
+
+        function highlightActiveSection(secName) {
+            document.querySelectorAll('.sec-tab').forEach(tab => {
+                if (tab.getAttribute('data-section') === secName) {
+                    tab.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                    tab.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                } else {
+                    tab.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    tab.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                }
+            });
+        }
+
+        // AJAX Autosave to protect from network drops
+        function saveAnswerAsync() {
+            const q = rawQuestions[currentIndex];
+            fetch('/api/save-answer', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    attempt_id: attemptId,
+                    question_id: q.id,
+                    selected_option: q.selectedOption,
+                    is_marked_for_review: q.isMarkedReview,
+                    time_spent: 5
+                })
+            });
+            const btn = document.getElementById(`palette-btn-${currentIndex}`);
+            if (btn) btn.className = `palette-btn ${getPaletteClass(q)}`;
+            updateSummaryCounts();
+        }
+
+        // Real-Time Countdown Timer
+        function startTimer() {
+            const timerEl = document.getElementById('exam-timer');
+            const interval = setInterval(() => {
+                if (remainingSeconds <= 0) {
+                    clearInterval(interval);
+                    timerEl.textContent = "00:00:00";
+                    alert("Exam Time Expired! Your test is submitting automatically.");
+                    window.location.href = `/test/submit/${attemptId}`;
+                    return;
+                }
+
+                remainingSeconds--;
+                const hrs = Math.floor(remainingSeconds / 3600);
+                const mins = Math.floor((remainingSeconds % 3600) / 60);
+                const secs = remainingSeconds % 60;
+
+                timerEl.textContent = 
+                    `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function confirmSubmitModal() {
+            updateSummaryCounts();
+            document.getElementById('submit-modal').classList.remove('hidden');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submit-modal').classList.add('hidden');
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            initPalette();
+            loadQuestion(0);
+            startTimer();
+        };
+    </script>
+</body>
+</html>

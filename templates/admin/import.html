@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Import Questions - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-10 space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Bulk Import Questions</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Upload a CSV or JSON file to import hundreds of questions simultaneously.</p>
+        </div>
+        <a href="{{ url_for('admin_questions') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+            Cancel
+        </a>
+    </div>
+
+    <!-- Upload Box -->
+    <form method="POST" action="{{ url_for('admin_import_questions') }}" enctype="multipart/form-data" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6 text-xs font-semibold text-slate-700">
+        <div>
+            <label class="block mb-2 font-bold text-slate-800">Select CSV or JSON File</label>
+            <input type="file" name="file" accept=".csv, .json" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs">
+        </div>
+
+        <!-- Sample Schema Documentation -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-[11px] font-mono text-slate-600">
+            <strong class="font-bold text-slate-800 block text-xs">Required CSV Columns:</strong>
+            <div>subject_code, tier, difficulty, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, shortcut</div>
+            <div class="text-slate-400 mt-1">Example: ENG, Tier-I, Easy, "Synonym of CANDID?", Deceptive, Frank, Shy, Rude, B, "Candid means frank.", "Candid=Frank"</div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-md transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Upload and Import Questions</span>
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}SSC CHSL Skill Test & Typing Speed Test Module (Official Practical Exam){% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-800 text-emerald-300 border border-emerald-700">
+                    Tier-II Section-III Module-II
+                </span>
+                <h1 class="text-3xl font-extrabold tracking-tight mt-2 flex items-center gap-2">
+                    <i class="fa-solid fa-keyboard text-emerald-400"></i> Practical Typing Test & Skill Assessment
+                </h1>
+                <p class="text-sm text-emerald-100 mt-2 max-w-2xl leading-relaxed">
+                    Official SSC CHSL qualifying typing exam engine. Practice on authentic printed government passages with real-time keystroke tracking, live WPM, backspace penalty, and error evaluations.
+                </p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center min-w-[220px]">
+                <div class="text-xs uppercase text-emerald-200 font-bold">Qualifying Speed</div>
+                <div class="text-3xl font-extrabold text-white mt-1">35 WPM</div>
+                <div class="text-[11px] text-emerald-300 mt-0.5">English (10,500 KDPH / 10 Mins)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- Official SSC Typing Exam Criteria Banner -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i> Official SSC CHSL Skill/Typing Test Standards
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-900 block text-sm mb-1">LDC / JSA Speed Standard</span>
+                <p class="text-slate-600 leading-relaxed">
+                    <strong>35 Words Per Minute (WPM)</strong> in English or <strong>30 WPM</strong> in Hindi on Computer. Corresponds to approximately 10,500 key depressions per hour.
+                </p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-900 block text-sm mb-1">Data Entry Operator (DEO)</span>
+                <p class="text-slate-600 leading-relaxed">
+                    <strong>8,000 Key Depressions Per Hour (KDPH)</strong> on Computer. Passage consists of around 2,000 to 2,200 strokes for a 15-minute test.
+                </p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-900 block text-sm mb-1">Qualifying Nature</span>
+                <p class="text-slate-600 leading-relaxed">
+                    The Skill/Typing test is strictly <strong>Qualifying in nature</strong>. Marks are not added to merit, but passing is mandatory to be eligible for appointment.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Practice Passages -->
+    <div>
+        <h2 class="text-xl font-extrabold text-slate-900 mb-6">Select a Typing Passage to Begin Assessment</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for t in tests %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                            {{ t.difficulty }} Level
+                        </span>
+                        <span class="text-xs text-slate-500 font-semibold">
+                            <i class="fa-regular fa-clock mr-1"></i> {{ t.duration_minutes }} Mins
+                        </span>
+                    </div>
+
+                    <h3 class="font-bold text-slate-900 text-base leading-snug">
+                        {{ t.title }}
+                    </h3>
+
+                    <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono">
+                        {{ t.text_content }}
+                    </p>
+
+                    <div class="flex items-center justify-between text-xs text-slate-600 pt-2">
+                        <span>Target: <strong>{{ t.target_wpm }} WPM</strong></span>
+                        <span>Total Characters: <strong>{{ t.text_content|length }}</strong></span>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <a href="{{ url_for('typing_test_play', test_id=t.id) }}" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-play"></i> Start Typing Test
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- User Recent Typing History -->
+    {% if user_attempts %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-600"></i> Your Recent Typing Evaluations
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-3">Passage Title</th>
+                        <th class="py-2.5 px-3 text-center">Gross WPM</th>
+                        <th class="py-2.5 px-3 text-center">Net WPM</th>
+                        <th class="py-2.5 px-3 text-center">Accuracy</th>
+                        <th class="py-2.5 px-3 text-center">Errors</th>
+                        <th class="py-2.5 px-3 text-center">Result</th>
+                        <th class="py-2.5 px-3 text-right">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for a in user_attempts %}
+                    <tr>
+                        <td class="py-3 px-3 font-bold text-slate-900">{{ a.title }}</td>
+                        <td class="py-3 px-3 text-center">{{ a.gross_wpm }}</td>
+                        <td class="py-3 px-3 text-center font-bold text-blue-700">{{ a.net_wpm }} WPM</td>
+                        <td class="py-3 px-3 text-center font-bold text-emerald-600">{{ a.accuracy }}%</td>
+                        <td class="py-3 px-3 text-center text-rose-600 font-bold">{{ a.errors }}</td>
+                        <td class="py-3 px-3 text-center">
+                            {% if a.passed_qualifying %}
+                                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px]">QUALIFIED</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-[11px]">NOT QUALIFIED</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-right text-slate-400">{{ a.completed_at|datetimeformat }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ test.title }} - Official Typing Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono-exam { font-family: 'Roboto Mono', monospace; }
+        .char-correct { color: #16a34a; background-color: #dcfce7; }
+        .char-wrong { color: #dc2626; background-color: #fee2e2; }
+        .char-current { border-bottom: 2px solid #2563eb; background-color: #e0f2fe; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Assessment Header -->
+    <header class="bg-slate-900 text-white px-6 py-3 flex justify-between items-center border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('typing_test_home') }}" class="text-slate-400 hover:text-white transition-colors" title="Back to Typing Hub">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-sm font-bold text-white">{{ test.title }}</h1>
+                <p class="text-[11px] text-slate-400">Target Benchmark: <strong class="text-emerald-400">{{ test.target_wpm }} WPM (English)</strong> | Standard 10-Minute Assessment</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <!-- Timer Display -->
+            <div class="bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-700 flex items-center space-x-2">
+                <i class="fa-regular fa-clock text-amber-400"></i>
+                <div class="text-right">
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-bold">Time Left</span>
+                    <span id="time-display" class="font-mono text-base font-extrabold text-amber-300">10:00</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="finishTest()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow transition-colors">
+                Finish Test
+            </button>
+        </div>
+    </header>
+
+    <!-- Real-Time Metrics Bar -->
+    <div class="bg-white border-b border-slate-200 px-6 py-2.5">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-6 gap-4 text-center">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Net Speed</span>
+                <span id="stat-net-wpm" class="text-xl font-extrabold text-blue-700">0.0</span>
+                <span class="text-[10px] text-slate-500 font-medium"> WPM</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Gross Speed</span>
+                <span id="stat-gross-wpm" class="text-xl font-extrabold text-slate-700">0.0</span>
+                <span class="text-[10px] text-slate-500 font-medium"> WPM</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Accuracy</span>
+                <span id="stat-accuracy" class="text-xl font-extrabold text-emerald-600">100%</span>
+                <span class="text-[10px] text-slate-500 font-medium"> Required ≥93%</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Keystrokes</span>
+                <span id="stat-keystrokes" class="text-xl font-extrabold text-slate-800">0</span>
+                <span class="text-[10px] text-slate-500 font-medium"> strokes</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Errors</span>
+                <span id="stat-errors" class="text-xl font-extrabold text-rose-600">0</span>
+                <span class="text-[10px] text-slate-500 font-medium"> mistakes</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Backspaces</span>
+                <span id="stat-backspaces" class="text-xl font-extrabold text-amber-600">0</span>
+                <span class="text-[10px] text-slate-500 font-medium"> edits</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Typing Canvas -->
+    <main class="max-w-5xl mx-auto px-4 py-8 flex-grow flex flex-col space-y-6 w-full">
+        
+        <!-- Target Passage Box -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100 text-xs">
+                <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                    <i class="fa-solid fa-file-lines text-blue-600 mr-1"></i> Printed Text to Type
+                </span>
+                <span class="text-slate-400">Click in the typing area below and start typing to automatically start timer</span>
+            </div>
+            <div id="passage-container" class="font-mono-exam text-base leading-relaxed text-slate-800 p-4 bg-slate-50 rounded-xl border border-slate-200 max-h-56 overflow-y-auto whitespace-pre-wrap select-none"></div>
+        </div>
+
+        <!-- Typing Input Box -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+            <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                    <i class="fa-solid fa-i-cursor text-emerald-600 mr-1"></i> Candidate Typing Input
+                </span>
+                <span id="typing-status" class="text-slate-400 italic">Ready to type...</span>
+            </div>
+            <textarea id="typing-input" 
+                      rows="6" 
+                      class="w-full p-4 rounded-xl border-2 border-slate-300 focus:border-blue-600 focus:ring-0 font-mono-exam text-base leading-relaxed text-slate-900 bg-white shadow-inner resize-none outline-none"
+                      placeholder="Start typing the passage here. The timer will automatically begin upon your first keystroke..."
+                      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        </div>
+    </main>
+
+    <!-- Completion / Result Modal -->
+    <div id="result-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl text-center">
+            <div id="modal-verdict-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl"></div>
+            <div>
+                <h3 id="modal-verdict-title" class="text-2xl font-extrabold text-slate-900"></h3>
+                <p id="modal-verdict-msg" class="text-xs text-slate-600 mt-1"></p>
+            </div>
+
+            <!-- Detailed Metrics Grid -->
+            <div class="grid grid-cols-2 gap-3 text-left text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Net Speed</span>
+                    <strong class="text-base text-blue-700" id="res-net-wpm">0 WPM</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Accuracy</span>
+                    <strong class="text-base text-emerald-600" id="res-accuracy">0%</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Keystrokes</span>
+                    <strong class="text-slate-800" id="res-keystrokes">0</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Errors</span>
+                    <strong class="text-rose-600" id="res-errors">0</strong>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <a href="{{ url_for('typing_test_play', test_id=test.id) }}" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+                    Try Again
+                </a>
+                <a href="{{ url_for('typing_test_home') }}" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition-colors">
+                    Back to Hub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Typing Engine Script -->
+    <script>
+        const originalText = {{ test.text_content|tojson }};
+        const testId = {{ test.id }};
+        const targetWPM = {{ test.target_wpm }};
+        let durationSeconds = {{ test.duration_minutes }} * 60;
+        let remainingSeconds = durationSeconds;
+        let timerStarted = false;
+        let timerInterval = null;
+        let backspaceCount = 0;
+
+        const inputArea = document.getElementById('typing-input');
+        const passageContainer = document.getElementById('passage-container');
+
+        // Render target text with spans for each character
+        function renderPassage() {
+            passageContainer.innerHTML = '';
+            for (let i = 0; i < originalText.length; i++) {
+                const span = document.createElement('span');
+                span.id = `char-${i}`;
+                span.textContent = originalText[i];
+                passageContainer.appendChild(span);
+            }
+        }
+
+        // Live typing handler
+        inputArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                backspaceCount++;
+                document.getElementById('stat-backspaces').textContent = backspaceCount;
+            }
+        });
+
+        inputArea.addEventListener('input', () => {
+            if (!timerStarted) {
+                startTimer();
+                timerStarted = true;
+                document.getElementById('typing-status').textContent = "Exam in progress...";
+                document.getElementById('typing-status').className = "text-emerald-600 font-bold";
+            }
+
+            const typed = inputArea.value;
+            let errors = 0;
+            let correctChars = 0;
+
+            for (let i = 0; i < originalText.length; i++) {
+                const charEl = document.getElementById(`char-${i}`);
+                if (!charEl) continue;
+
+                if (i < typed.length) {
+                    if (typed[i] === originalText[i]) {
+                        charEl.className = 'char-correct';
+                        correctChars++;
+                    } else {
+                        charEl.className = 'char-wrong';
+                        errors++;
+                    }
+                } else if (i === typed.length) {
+                    charEl.className = 'char-current';
+                } else {
+                    charEl.className = '';
+                }
+            }
+
+            // Calculate live statistics
+            const elapsedSeconds = Math.max(1, durationSeconds - remainingSeconds);
+            const elapsedMinutes = elapsedSeconds / 60;
+            const keystrokes = typed.length;
+            const grossWPM = (keystrokes / 5) / elapsedMinutes;
+            const netWPM = Math.max(0, grossWPM - (errors / elapsedMinutes));
+            const accuracy = keystrokes > 0 ? (correctChars / keystrokes) * 100 : 100;
+
+            document.getElementById('stat-gross-wpm').textContent = grossWPM.toFixed(1);
+            document.getElementById('stat-net-wpm').textContent = netWPM.toFixed(1);
+            document.getElementById('stat-accuracy').textContent = `${accuracy.toFixed(1)}%`;
+            document.getElementById('stat-keystrokes').textContent = keystrokes;
+            document.getElementById('stat-errors').textContent = errors;
+
+            // Auto-scroll target passage to follow typing cursor
+            const activeChar = document.getElementById(`char-${typed.length}`);
+            if (activeChar) {
+                activeChar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Auto-complete if typed all text
+            if (typed.length >= originalText.length) {
+                finishTest();
+            }
+        });
+
+        function startTimer() {
+            const timeEl = document.getElementById('time-display');
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                const mins = Math.floor(remainingSeconds / 60);
+                const secs = remainingSeconds % 60;
+                timeEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    finishTest();
+                }
+            }, 1000);
+        }
+
+        function finishTest() {
+            if (timerInterval) clearInterval(timerInterval);
+            inputArea.disabled = true;
+
+            const typed = inputArea.value;
+            const elapsedSeconds = Math.max(1, durationSeconds - remainingSeconds);
+            const elapsedMinutes = elapsedSeconds / 60;
+            const keystrokes = typed.length;
+
+            let errors = 0;
+            let correctChars = 0;
+            for (let i = 0; i < typed.length; i++) {
+                if (i < originalText.length && typed[i] === originalText[i]) {
+                    correctChars++;
+                } else {
+                    errors++;
+                }
+            }
+
+            const grossWPM = (keystrokes / 5) / elapsedMinutes;
+            const netWPM = Math.max(0, grossWPM - (errors / elapsedMinutes));
+            const accuracy = keystrokes > 0 ? (correctChars / keystrokes) * 100 : 0;
+            const isQualified = (netWPM >= targetWPM && accuracy >= 93.0);
+
+            // Populate Modal
+            const iconEl = document.getElementById('modal-verdict-icon');
+            const titleEl = document.getElementById('modal-verdict-title');
+            const msgEl = document.getElementById('modal-verdict-msg');
+
+            if (isQualified) {
+                iconEl.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl bg-emerald-100 text-emerald-600";
+                iconEl.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                titleEl.textContent = "QUALIFIED!";
+                titleEl.className = "text-2xl font-extrabold text-emerald-700";
+                msgEl.textContent = `You met the official SSC benchmark of ${targetWPM} WPM with outstanding accuracy!`;
+            } else {
+                iconEl.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl bg-rose-100 text-rose-600";
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                titleEl.textContent = "NOT QUALIFIED";
+                titleEl.className = "text-2xl font-extrabold text-rose-700";
+                msgEl.textContent = `Aim for at least ${targetWPM} Net WPM and 93% accuracy. Keep practicing daily!`;
+            }
+
+            document.getElementById('res-net-wpm').textContent = `${netWPM.toFixed(1)} WPM`;
+            document.getElementById('res-accuracy').textContent = `${accuracy.toFixed(1)}%`;
+            document.getElementById('res-keystrokes').textContent = keystrokes;
+            document.getElementById('res-errors').textContent = errors;
+
+            // Save to backend API
+            fetch('/api/typing/submit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    test_id: testId,
+                    gross_wpm: grossWPM.toFixed(1),
+                    net_wpm: netWPM.toFixed(1),
+                    accuracy: accuracy.toFixed(1),
+                    keystrokes: keystrokes,
+                    errors: errors,
+                    time_taken: elapsedSeconds
+                })
+            });
+
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        window.onload = renderPassage;
+    </script>
+</body>
+</html>

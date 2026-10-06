@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}SSC CHSL Tier-I Hub - Official 100 Questions Exam Simulation{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-blue-900 to-slate-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-800/80 text-amber-300 text-xs font-bold mb-3 border border-blue-700">
+                    <i class="fa-solid fa-certificate"></i> Official Scheme of Examination
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight">SSC CHSL Tier-I Examination Hub</h1>
+                <p class="text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+                    Tier-I is an objective computer-based test consisting of exactly <strong>100 Questions</strong> carrying <strong>200 Marks</strong> for a duration of <strong>60 Minutes</strong>.
+                </p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center min-w-[220px]">
+                <div class="text-xs uppercase text-slate-300 font-bold">Negative Marking</div>
+                <div class="text-2xl font-extrabold text-amber-400 mt-1">-0.50 Marks</div>
+                <div class="text-[11px] text-slate-300 mt-0.5">for each incorrect answer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- Official Structure Grid (4 Sections x 25 Qs) -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-blue-600"></i> Tier-I Official Structure Breakdown
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-500">Section 1</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">25 Qs</span>
+                </div>
+                <h3 class="font-bold text-slate-900 text-sm">English Language</h3>
+                <div class="mt-2 text-xs text-slate-600 space-y-1">
+                    <div>Questions: <strong>25</strong></div>
+                    <div>Max Marks: <strong>50</strong></div>
+                    <div class="text-slate-500 text-[11px]">Grammar, Vocab, Comprehension</div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-500">Section 2</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">25 Qs</span>
+                </div>
+                <h3 class="font-bold text-slate-900 text-sm">General Intelligence</h3>
+                <div class="mt-2 text-xs text-slate-600 space-y-1">
+                    <div>Questions: <strong>25</strong></div>
+                    <div>Max Marks: <strong>50</strong></div>
+                    <div class="text-slate-500 text-[11px]">Analogies, Coding, Syllogisms</div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-500">Section 3</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">25 Qs</span>
+                </div>
+                <h3 class="font-bold text-slate-900 text-sm">Quantitative Aptitude</h3>
+                <div class="mt-2 text-xs text-slate-600 space-y-1">
+                    <div>Questions: <strong>25</strong></div>
+                    <div>Max Marks: <strong>50</strong></div>
+                    <div class="text-slate-500 text-[11px]">Arithmetic, Algebra, Geometry</div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-500">Section 4</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">25 Qs</span>
+                </div>
+                <h3 class="font-bold text-slate-900 text-sm">General Awareness</h3>
+                <div class="mt-2 text-xs text-slate-600 space-y-1">
+                    <div>Questions: <strong>25</strong></div>
+                    <div>Max Marks: <strong>50</strong></div>
+                    <div class="text-slate-500 text-[11px]">Polity, History, Science, GK</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800 flex items-center justify-between">
+            <span class="font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> Total Tier-I Test: 100 Questions | 200 Marks | 60 Minutes Duration</span>
+            <span class="text-slate-500 font-medium">Equal Weightage (50 Marks / Subject)</span>
+        </div>
+    </div>
+
+    <!-- Tier-I Available Mock Tests -->
+    <div>
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">Available Tier-I Full Length Tests</h2>
+                <p class="text-xs text-slate-500 mt-1">Full 100-question timed simulations with instant scorecard and solution review.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for mock in mocks %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2.5 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold">{{ mock.tier }} Full Mock</span>
+                        <span class="text-xs text-slate-500 font-medium"><i class="fa-regular fa-clock mr-1"></i> {{ mock.duration_minutes }} Mins</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors">
+                        {{ mock.title }}
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                        {{ mock.instructions }}
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Questions</span>
+                            <span class="font-extrabold text-slate-900 text-sm">{{ mock.total_questions }} Qs</span>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Max Marks</span>
+                            <span class="font-extrabold text-slate-900 text-sm">{{ mock.total_marks|int }}</span>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Marking</span>
+                            <span class="font-extrabold text-slate-900 text-sm">+2 / -0.50</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-xs text-slate-400 font-medium"><i class="fa-solid fa-shield-check text-emerald-500 mr-1"></i> Verified TCS Pattern</span>
+                    <a href="{{ url_for('start_mock_test', mock_test_id=mock.id) }}" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-play"></i> Start Test Now
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Subject Practice Quick Links -->
+    <div class="bg-slate-100 rounded-2xl p-6 border border-slate-200">
+        <h3 class="font-bold text-slate-900 text-base mb-4">Practice Tier-I Subjects Individually</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for sc in subject_counts %}
+            <a href="{{ url_for('practice', subject=sc.code, tier='Tier-I') }}" class="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-400 transition-all flex items-center justify-between group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center {{ sc.color }}">
+                        <i class="fa-solid {{ sc.icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900 text-xs group-hover:text-blue-600 transition-colors">{{ sc.name }}</div>
+                        <div class="text-[11px] text-slate-400 font-medium">{{ sc.q_cnt }} Practice Questions</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Weak Topics & Mistake Correction Arena - SSC CHSL{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-rose-900 to-slate-900 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-800 text-rose-200 border border-rose-700">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-300 mr-1"></i> Error Diagnosis
+                </span>
+                <h1 class="text-2xl font-extrabold tracking-tight mt-2">Weak Topics & Mistake Re-Attempt Arena</h1>
+                <p class="text-xs text-rose-100 mt-1">Review questions you answered incorrectly in recent mock tests and practice sessions to permanently eliminate negative marks.</p>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors">
+                Back to Dashboard &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    {% if questions %}
+        <div class="p-4 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-900 flex items-center justify-between">
+            <span><i class="fa-solid fa-circle-exclamation mr-1.5 text-rose-600"></i> You have <strong>{{ questions|length }}</strong> questions marked for review from past mistakes.</span>
+            <span class="text-rose-700 font-bold">Goal: 100% Retake Accuracy</span>
+        </div>
+
+        {% for q in questions %}
+        <div class="bg-white rounded-2xl border border-rose-200 p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="font-extrabold px-2.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">Q #{{ q.id }}</span>
+                    <span class="font-bold text-slate-800">{{ q.subject_name }}</span>
+                </div>
+                <span class="text-rose-600 font-bold text-[11px]"><i class="fa-solid fa-xmark mr-1"></i> Previously Missed</span>
+            </div>
+
+            <div class="text-sm font-bold text-slate-900 leading-relaxed whitespace-pre-line">
+                {{ q.question_text }}
+            </div>
+
+            <!-- Re-Attempt Buttons -->
+            <div class="space-y-2 pt-1" id="weak-opts-{{ q.id }}">
+                {% for opt_key, opt_val in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                <button type="button" 
+                        onclick="checkWeakAnswer({{ q.id }}, '{{ opt_key }}', '{{ q.correct_option }}')" 
+                        id="w-btn-{{ q.id }}-{{ opt_key }}"
+                        class="w-full text-left p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-400 transition-all flex items-start gap-2.5 text-xs font-medium text-slate-800">
+                    <span id="w-badge-{{ q.id }}-{{ opt_key }}" class="w-5 h-5 rounded bg-white border border-slate-300 font-bold text-slate-700 flex items-center justify-center shrink-0 text-[10px]">
+                        {{ opt_key }}
+                    </span>
+                    <span class="pt-0.5">{{ opt_val }}</span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <div id="weak-expl-{{ q.id }}" class="hidden pt-3 border-t border-slate-100 space-y-2">
+                <div id="weak-status-{{ q.id }}" class="p-3 rounded-xl text-xs font-bold"></div>
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+                    <strong class="text-slate-900 block font-bold">Explanation & Method:</strong>
+                    <p class="text-slate-700 leading-relaxed whitespace-pre-line">{{ q.explanation }}</p>
+                    {% if q.shortcut %}
+                    <div class="mt-2 text-indigo-700 font-semibold bg-indigo-50 p-2 rounded">
+                        Shortcut Trick: {{ q.shortcut }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 space-y-3">
+            <i class="fa-solid fa-circle-check text-4xl text-emerald-500"></i>
+            <h3 class="font-bold text-slate-800 text-base">No Mistakes on Record!</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Great job! You haven't made errors in recent tests, or all mistakes have been resolved.</p>
+            <a href="{{ url_for('mock_tests') }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold">Take a Mock Test</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function checkWeakAnswer(qId, selectedOpt, correctOpt) {
+    const container = document.getElementById(`weak-opts-${qId}`);
+    const buttons = container.querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+
+    const isCorrect = (selectedOpt.toUpperCase() === correctOpt.toUpperCase());
+
+    buttons.forEach(btn => {
+        const letter = btn.id.split('-')[3];
+        const badge = document.getElementById(`w-badge-${qId}-${letter}`);
+
+        if (letter.toUpperCase() === correctOpt.toUpperCase()) {
+            btn.className = "w-full text-left p-3 rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-950 font-bold flex items-start gap-2.5 text-xs";
+            badge.className = "w-5 h-5 rounded bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]";
+        } else if (letter.toUpperCase() === selectedOpt.toUpperCase() && !isCorrect) {
+            btn.className = "w-full text-left p-3 rounded-xl border border-rose-500 bg-rose-50 text-rose-950 font-bold flex items-start gap-2.5 text-xs";
+            badge.className = "w-5 h-5 rounded bg-rose-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]";
+        } else {
+            btn.classList.add('opacity-40');
+        }
+    });
+
+    const explBox = document.getElementById(`weak-expl-${qId}`);
+    const statusBox = document.getElementById(`weak-status-${qId}`);
+
+    if (isCorrect) {
+        statusBox.className = "p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300";
+        statusBox.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Concept Cleared! You got it right this time.';
+    } else {
+        statusBox.className = "p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300";
+        statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Still Incorrect. Review the correct option (${correctOpt}) below.`;
+    }
+
+    explBox.classList.remove('hidden');
+}
+</script>
+{% endblock %}

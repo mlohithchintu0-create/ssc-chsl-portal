@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Examination Scorecard - {{ attempt.test_title }}{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-slate-900 to-blue-950 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-800 text-amber-300 border border-blue-700">
+                    Official Exam Scorecard
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">{{ attempt.test_title }}</h1>
+                <p class="text-xs text-slate-300 mt-1">Submitted on {{ attempt.end_time|datetimeformat }}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('mock_tests') }}" class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Retake / Other Tests
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-xl text-xs font-bold transition-colors">
+                    Student Dashboard &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Overall Key Performance Indicators -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Final Score -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Your Score</span>
+            <div class="text-2xl font-extrabold text-blue-700 mt-1">{{ attempt.final_score }}</div>
+            <span class="text-[11px] text-slate-500 font-medium">Out of {{ attempt.max_marks|int }}</span>
+        </div>
+
+        <!-- Accuracy -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Accuracy</span>
+            <div class="text-2xl font-extrabold text-emerald-600 mt-1">{{ attempt.accuracy }}%</div>
+            <span class="text-[11px] text-slate-500 font-medium">Precision rate</span>
+        </div>
+
+        <!-- Correct Answers -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Correct</span>
+            <div class="text-2xl font-extrabold text-emerald-600 mt-1">{{ attempt.correct_answers }}</div>
+            <span class="text-[11px] text-emerald-700 font-bold">+{{ attempt.correct_answers * attempt.marks_per_question }} Marks</span>
+        </div>
+
+        <!-- Wrong Answers -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Incorrect</span>
+            <div class="text-2xl font-extrabold text-rose-600 mt-1">{{ attempt.wrong_answers }}</div>
+            <span class="text-[11px] text-rose-700 font-bold">-{{ attempt.wrong_answers * attempt.negative_marks }} Marks</span>
+        </div>
+
+        <!-- Attempted vs Total -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Attempted</span>
+            <div class="text-2xl font-extrabold text-slate-800 mt-1">{{ attempt.attempted }}</div>
+            <span class="text-[11px] text-slate-500 font-medium">Out of {{ attempt.total_questions }} Qs</span>
+        </div>
+
+        <!-- Time Taken -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Time Used</span>
+            <div class="text-2xl font-extrabold text-slate-800 mt-1 font-mono">
+                {{ (attempt.time_taken_seconds // 60)|int }}m {{ (attempt.time_taken_seconds % 60)|int }}s
+            </div>
+            <span class="text-[11px] text-slate-500 font-medium">Duration: {{ attempt.duration_minutes }}m</span>
+        </div>
+    </div>
+
+    <!-- Visual Chart & Subject-Wise Breakdown Table -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- Visual Donut Chart (Chart.js) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-blue-600"></i> Performance Distribution
+            </h3>
+            <div class="h-56 relative flex items-center justify-center">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold pt-2 border-t border-slate-100">
+                <div class="text-emerald-700">Correct: {{ attempt.correct_answers }}</div>
+                <div class="text-rose-700">Wrong: {{ attempt.wrong_answers }}</div>
+                <div class="text-slate-500">Skipped: {{ attempt.total_questions - attempt.attempted }}</div>
+            </div>
+        </div>
+
+        <!-- Subject-Wise Performance Table -->
+        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-table-list text-purple-600"></i> Section-Wise Accuracy & Scores
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
+                        <tr>
+                            <th class="py-2.5 px-3">Subject</th>
+                            <th class="py-2.5 px-3 text-center">Total Qs</th>
+                            <th class="py-2.5 px-3 text-center">Attempted</th>
+                            <th class="py-2.5 px-3 text-center text-emerald-700">Correct</th>
+                            <th class="py-2.5 px-3 text-center text-rose-700">Wrong</th>
+                            <th class="py-2.5 px-3 text-center">Accuracy</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                        {% for st in subject_stats %}
+                        <tr>
+                            <td class="py-3 px-3 font-bold text-slate-900">{{ st.subject_name }}</td>
+                            <td class="py-3 px-3 text-center">{{ st.total_questions }}</td>
+                            <td class="py-3 px-3 text-center">{{ st.attempted }}</td>
+                            <td class="py-3 px-3 text-center font-bold text-emerald-600">{{ st.correct }}</td>
+                            <td class="py-3 px-3 text-center font-bold text-rose-600">{{ st.wrong }}</td>
+                            <td class="py-3 px-3 text-center">
+                                {% if st.attempted > 0 %}
+                                    <span class="px-2 py-0.5 rounded font-bold {% if (st.correct / st.attempted) >= 0.75 %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                        {{ (st.correct / st.attempted * 100)|round(1) }}%
+                                    </span>
+                                {% else %}
+                                    <span class="text-slate-400">0%</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Solution Review Module -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-blue-600"></i> Step-by-Step Solutions & Detailed Review
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Filter questions by status to identify mistakes and strengthen conceptual understanding.</p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <button type="button" onclick="filterSolutions('all')" id="sol-btn-all" class="sol-filter px-3 py-1.5 rounded-lg bg-white shadow-sm text-blue-700">All ({{ solutions|length }})</button>
+                <button type="button" onclick="filterSolutions('correct')" id="sol-btn-correct" class="sol-filter px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Correct</button>
+                <button type="button" onclick="filterSolutions('wrong')" id="sol-btn-wrong" class="sol-filter px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Incorrect</button>
+                <button type="button" onclick="filterSolutions('unattempted')" id="sol-btn-unattempted" class="sol-filter px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Unattempted</button>
+            </div>
+        </div>
+
+        <!-- Questions List -->
+        <div class="space-y-6">
+            {% for s in solutions %}
+            <div class="sol-item p-6 rounded-2xl border transition-all 
+                {% if s.is_correct == 1 %}border-emerald-200 bg-emerald-50/20 data-status="correct"
+                {% elif s.is_correct == 0 %}border-rose-200 bg-rose-50/20 data-status="wrong"
+                {% else %}border-slate-200 bg-white data-status="unattempted"{% endif %}"
+                data-status="{% if s.is_correct == 1 %}correct{% elif s.is_correct == 0 %}wrong{% else %}unattempted{% endif %}">
+                
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold px-2 py-0.5 rounded bg-slate-100 text-slate-800">Q.{{ s.order_num }}</span>
+                        <span class="font-bold text-slate-700">{{ s.subject_name }}</span>
+                        <span class="text-slate-400">({{ s.section_name }})</span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        {% if s.is_correct == 1 %}
+                            <span class="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[11px] flex items-center gap-1">
+                                <i class="fa-solid fa-check"></i> Correct (+{{ attempt.marks_per_question }})
+                            </span>
+                        {% elif s.is_correct == 0 %}
+                            <span class="px-2.5 py-1 rounded bg-rose-100 text-rose-800 font-extrabold text-[11px] flex items-center gap-1">
+                                <i class="fa-solid fa-xmark"></i> Incorrect (-{{ attempt.negative_marks }})
+                            </span>
+                        {% else %}
+                            <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-600 font-bold text-[11px]">
+                                Skipped (0 Marks)
+                            </span>
+                        {% endif %}
+
+                        <!-- Bookmark Action -->
+                        <button type="button" onclick="toggleResultBookmark({{ s.id }})" id="sol-bm-{{ s.id }}" class="p-1.5 text-slate-400 hover:text-amber-500 rounded" title="Bookmark">
+                            <i class="{% if s.is_bookmarked %}fa-solid text-amber-500{% else %}fa-regular{% endif %} fa-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Text -->
+                <div class="text-sm font-bold text-slate-900 mt-3 leading-relaxed whitespace-pre-line">
+                    {{ s.question_text }}
+                </div>
+
+                <!-- 4 Options with Color Badging -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs font-medium">
+                    {% for opt_key, opt_val in [('A', s.option_a), ('B', s.option_b), ('C', s.option_c), ('D', s.option_d)] %}
+                    <div class="p-3 rounded-xl border flex items-start gap-2.5 
+                        {% if opt_key == s.correct_option %}bg-emerald-50 border-emerald-500 text-emerald-950 font-bold
+                        {% elif opt_key == s.selected_option and s.is_correct == 0 %}bg-rose-50 border-rose-500 text-rose-950 font-bold
+                        {% else %}bg-slate-50 border-slate-200 text-slate-700{% endif %}">
+                        <span class="w-5 h-5 rounded flex items-center justify-center font-bold text-[10px] shrink-0
+                            {% if opt_key == s.correct_option %}bg-emerald-600 text-white
+                            {% elif opt_key == s.selected_option and s.is_correct == 0 %}bg-rose-600 text-white
+                            {% else %}bg-white border border-slate-300 text-slate-600{% endif %}">
+                            {{ opt_key }}
+                        </span>
+                        <div class="leading-snug">
+                            {{ opt_val }}
+                            {% if opt_key == s.correct_option %}
+                                <span class="text-emerald-700 text-[10px] font-bold block mt-0.5"><i class="fa-solid fa-check"></i> Official Correct Key</span>
+                            {% elif opt_key == s.selected_option %}
+                                <span class="text-rose-700 text-[10px] font-bold block mt-0.5"><i class="fa-solid fa-xmark"></i> Your Selected Option</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                    <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i> Step-by-Step Detailed Solution:
+                    </div>
+                    <div class="text-slate-700 leading-relaxed whitespace-pre-line">
+                        {{ s.explanation }}
+                    </div>
+                    {% if s.shortcut %}
+                    <div class="mt-2 pt-2 border-t border-slate-200 flex items-start gap-2 text-indigo-700 font-semibold bg-indigo-50/70 p-2.5 rounded-lg">
+                        <i class="fa-solid fa-wand-magic-sparkles mt-0.5"></i>
+                        <div><strong class="text-indigo-900">Shortcut Trick:</strong> {{ s.shortcut }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Chart.js Donut
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Correct', 'Incorrect', 'Unattempted'],
+            datasets: [{
+                data: [{{ attempt.correct_answers }}, {{ attempt.wrong_answers }}, {{ attempt.total_questions - attempt.attempted }}],
+                backgroundColor: ['#10b981', '#ef4444', '#cbd5e1'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '68%'
+        }
+    });
+
+    // Solution Filter Tabs
+    function filterSolutions(status) {
+        document.querySelectorAll('.sol-filter').forEach(btn => {
+            btn.classList.remove('bg-white', 'shadow-sm', 'text-blue-700');
+            btn.classList.add('text-slate-600');
+        });
+        document.getElementById(`sol-btn-${status}`).classList.add('bg-white', 'shadow-sm', 'text-blue-700');
+
+        document.querySelectorAll('.sol-item').forEach(item => {
+            if (status === 'all' || item.getAttribute('data-status') === status) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleResultBookmark(qId) {
+        fetch('/api/bookmark/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({question_id: qId})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const btn = document.getElementById(`sol-bm-${qId}`);
+                const icon = btn.querySelector('i');
+                if (data.bookmarked) {
+                    icon.className = "fa-solid fa-bookmark text-amber-500";
+                } else {
+                    icon.className = "fa-regular fa-bookmark";
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
