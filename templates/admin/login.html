@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Secure Gateway - SSC CHSL 2026{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-6 bg-slate-900 p-8 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl text-white">
+        <div class="text-center space-y-2">
+            <div class="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 mx-auto flex items-center justify-center text-2xl shadow-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-amber-300 text-[11px] font-bold border border-slate-700">
+                <i class="fa-solid fa-lock text-amber-400"></i> Authorized Personnel Only
+            </div>
+            <h2 class="text-2xl font-extrabold tracking-tight">Administrative Portal Login</h2>
+            <p class="text-xs text-slate-400">Restricted console for examination management, student live monitoring, and question bank administration.</p>
+        </div>
+
+        <!-- Credentials Form -->
+        <form method="POST" action="{{ url_for('admin_login') }}" class="space-y-4 text-xs font-semibold text-slate-300">
+            <div>
+                <label class="block mb-1 text-slate-300">Admin Username or Official Email</label>
+                <input type="text" name="username" required value="admin" class="w-full p-3 bg-slate-800/80 border border-slate-700 rounded-xl font-medium text-white focus:ring-2 focus:ring-amber-400 outline-none">
+            </div>
+
+            <div>
+                <label class="block mb-1 text-slate-300">Password</label>
+                <input type="password" name="password" required value="admin123" class="w-full p-3 bg-slate-800/80 border border-slate-700 rounded-xl font-medium text-white focus:ring-2 focus:ring-amber-400 outline-none">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-extrabold shadow-lg transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                <span>Authenticate to Admin Console</span>
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-slate-400 pt-3 border-t border-slate-800">
+            Are you a student or aspirant?
+            <a href="{{ url_for('login', portal='student') }}" class="text-blue-400 font-bold hover:underline ml-1">Switch to Student Portal &rarr;</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

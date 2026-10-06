@@ -9,16 +9,16 @@
             <div>
                 <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-950">System Administration</span>
                 <h1 class="text-2xl font-extrabold tracking-tight mt-1 flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-amber-400"></i> Admin Control Center
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i> Admin Control Center & Live Surveillance
                 </h1>
-                <p class="text-xs text-slate-400 mt-0.5">Manage question banks, import bulk questions via CSV/JSON, and monitor student test performance.</p>
+                <p class="text-xs text-slate-400 mt-0.5">Real-time candidate monitoring, exam attempt analytics, and full question bank management.</p>
             </div>
             <div class="flex items-center space-x-2">
+                <a href="{{ url_for('admin_students') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-users-viewfinder"></i> Live Student Monitor ({{ online_count }} Online)
+                </a>
                 <a href="{{ url_for('admin_add_question') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
                     <i class="fa-solid fa-plus"></i> Add Question
-                </a>
-                <a href="{{ url_for('admin_import_questions') }}" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-import"></i> Bulk Import
                 </a>
             </div>
         </div>
@@ -26,28 +26,48 @@
 </div>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    <!-- Quick Statistics -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+
+    <!-- Top Key Metrics Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-6 gap-4">
+        <!-- Online Now -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Online Now</span>
+            <div class="text-2xl font-extrabold text-emerald-600 mt-1 flex items-center justify-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>{{ online_count }}</span>
+            </div>
+            <a href="{{ url_for('admin_students') }}" class="text-[10px] text-emerald-700 underline font-semibold">View Live Users</a>
+        </div>
+
+        <!-- Total Questions -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
             <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Questions</span>
             <div class="text-2xl font-extrabold text-blue-700 mt-1">{{ total_q }}</div>
             <a href="{{ url_for('admin_questions') }}" class="text-[10px] text-blue-600 underline font-semibold">Manage Bank</a>
         </div>
+
+        <!-- Mock Tests -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
             <span class="text-slate-400 block text-[10px] uppercase font-bold">Mock Tests</span>
             <div class="text-2xl font-extrabold text-purple-700 mt-1">{{ total_mocks }}</div>
             <span class="text-[10px] text-slate-500">Tier-I & Tier-II</span>
         </div>
+
+        <!-- Registered Students -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
-            <span class="text-slate-400 block text-[10px] uppercase font-bold">Registered Users</span>
-            <div class="text-2xl font-extrabold text-emerald-600 mt-1">{{ total_users }}</div>
-            <span class="text-[10px] text-slate-500">Aspirants</span>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Aspirants</span>
+            <div class="text-2xl font-extrabold text-slate-800 mt-1">{{ total_users }}</div>
+            <a href="{{ url_for('admin_students') }}" class="text-[10px] text-slate-600 underline font-semibold">View Directory</a>
         </div>
+
+        <!-- Completed Attempts -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
             <span class="text-slate-400 block text-[10px] uppercase font-bold">Completed Tests</span>
             <div class="text-2xl font-extrabold text-slate-900 mt-1">{{ total_attempts }}</div>
-            <span class="text-[10px] text-slate-500">Mock Submissions</span>
+            <span class="text-[10px] text-slate-500">Submissions</span>
         </div>
+
+        <!-- Pending Reports -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
             <span class="text-slate-400 block text-[10px] uppercase font-bold">Pending Reports</span>
             <div class="text-2xl font-extrabold text-rose-600 mt-1">{{ pending_reports }}</div>
@@ -55,37 +75,97 @@
         </div>
     </div>
 
-    <!-- Recent Candidate Test Activity -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-users text-blue-600"></i> Recent Candidate Test Attempts
-        </h3>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left">
-                <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
-                    <tr>
-                        <th class="py-2.5 px-3">Candidate</th>
-                        <th class="py-2.5 px-3">Mock Test</th>
-                        <th class="py-2.5 px-3 text-center">Score</th>
-                        <th class="py-2.5 px-3 text-center">Accuracy</th>
-                        <th class="py-2.5 px-3 text-center">Correct / Wrong</th>
-                        <th class="py-2.5 px-3 text-right">Time</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                    {% for a in recent_attempts %}
-                    <tr>
-                        <td class="py-3 px-3 font-bold text-slate-900">{{ a.full_name }}</td>
-                        <td class="py-3 px-3 text-slate-700">{{ a.test_title }}</td>
-                        <td class="py-3 px-3 text-center font-bold text-blue-700">{{ a.final_score }}</td>
-                        <td class="py-3 px-3 text-center font-bold text-emerald-600">{{ a.accuracy }}%</td>
-                        <td class="py-3 px-3 text-center">{{ a.correct_answers }} / {{ a.wrong_answers }}</td>
-                        <td class="py-3 px-3 text-right text-slate-400">{{ a.end_time|datetimeformat }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Student Surveillance Banner Callout -->
+    <div class="bg-gradient-to-r from-blue-900 to-slate-900 text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2 text-xs font-bold text-amber-300">
+                <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                <span>Live Student Activity Surveillance Active</span>
+            </div>
+            <h3 class="text-lg font-extrabold">Who is using the portal right now?</h3>
+            <p class="text-xs text-slate-300 max-w-xl">
+                Track full student profiles, active devices (Desktop, Mobile, Tablet), IP origins, completed mock tests, scorecards, and typing test speeds in real-time.
+            </p>
         </div>
+        <a href="{{ url_for('admin_students') }}" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs shadow transition-colors shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-users"></i> Inspect Active Students Roster &rarr;
+        </a>
+    </div>
+
+    <!-- Two-Column Layout: Real-Time Activity Feed & Recent Mock Attempts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        
+        <!-- Column 1: Live Student Activity Feed -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-500"></i> Real-Time Candidate Activity Stream
+                </h3>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block mr-1"></span> Live
+                </span>
+            </div>
+
+            <div class="divide-y divide-slate-100 text-xs max-h-[460px] overflow-y-auto">
+                {% if recent_activities %}
+                    {% for act in recent_activities %}
+                    <div class="p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                            {{ act.full_name[0] }}
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-baseline">
+                                <a href="{{ url_for('admin_student_detail', student_id=act.user_id) }}" class="font-bold text-slate-900 hover:text-blue-600">
+                                    {{ act.full_name }}
+                                </a>
+                                <span class="text-[10px] text-slate-400 font-mono">{{ act.created_at|datetimeformat }}</span>
+                            </div>
+                            <div class="text-slate-700 font-medium mt-0.5">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-bold mr-1">{{ act.action }}</span>
+                                {{ act.details or '' }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-1 font-mono">
+                                Device: {{ act.device_type }} &bull; IP: {{ act.ip_address }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-10 text-slate-400 text-xs">No recent student activities logged yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Column 2: Recent Mock Test Attempts -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-signature text-blue-600"></i> Recent Mock Submissions
+                </h3>
+                <span class="text-xs text-slate-400">{{ recent_attempts|length }} submissions</span>
+            </div>
+
+            <div class="divide-y divide-slate-100 text-xs">
+                {% if recent_attempts %}
+                    {% for a in recent_attempts %}
+                    <div class="p-3.5 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-slate-900">{{ a.full_name }}</div>
+                            <div class="text-slate-500 text-[11px]">{{ a.test_title }}</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">{{ a.end_time|datetimeformat }}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-extrabold text-blue-700 text-sm block">{{ a.final_score }}</span>
+                            <span class="text-emerald-600 font-bold text-[11px]">{{ a.accuracy }}% accuracy</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-10 text-slate-400 text-xs">No completed test attempts yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

@@ -23,11 +23,45 @@ def init_db():
         password_hash TEXT NOT NULL,
         role TEXT DEFAULT 'user', -- 'admin' or 'user'
         full_name TEXT NOT NULL,
+        phone TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        device_type TEXT,
         streak INTEGER DEFAULT 1,
         last_login DATETIME,
+        last_active_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    # Alter table if existing database doesn't have the new columns yet
+    existing_user_cols = [row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()]
+    for col, col_type in [
+        ('phone', 'TEXT'),
+        ('ip_address', 'TEXT'),
+        ('user_agent', 'TEXT'),
+        ('device_type', 'TEXT'),
+        ('last_active_at', 'DATETIME')
+    ]:
+        if col not in existing_user_cols:
+            cursor.execute(f"ALTER TABLE users ADD COLUMN {col} {col_type}")
+
+    # Activity Logs Table (For Admin Live Student Monitoring)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        details TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        device_type TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_activity_user ON user_activity_logs(user_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_activity_time ON user_activity_logs(created_at);")
 
     # 2. Subjects Table
     cursor.execute("""

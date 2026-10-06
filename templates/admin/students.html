@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Live Student Monitoring & Activity - Admin Console{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900 text-white py-8 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 mb-1">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Admin Dashboard
+                </a>
+                <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-amber-400"></i> Student Monitoring & Active Users ({{ students|length }})
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5">Real-time surveillance of registered students, current online statuses, device types, and full exam usage statistics.</p>
+            </div>
+
+            <!-- Search Form -->
+            <form method="GET" action="{{ url_for('admin_students') }}" class="flex items-center gap-2 w-full md:w-auto">
+                <input type="text" name="q" value="{{ search }}" placeholder="Search by name, email, or username..." class="py-2 px-3.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-400">
+                <button type="submit" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold transition-colors">
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Active Status Summary Banner -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {% set online_now = students|selectattr('is_online_now', 'equalto', 1)|list|length %}
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Currently Online</span>
+                <div class="text-2xl font-extrabold text-emerald-600 mt-1 flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>{{ online_now }} Active Now</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-signal"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Registered Students</span>
+                <div class="text-2xl font-extrabold text-blue-700 mt-1">{{ students|length }} Aspirants</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Live Monitoring System</span>
+                <div class="text-sm font-extrabold text-slate-800 mt-1">Audit Trail Enabled</div>
+                <span class="text-[10px] text-slate-500">IPs, devices, & tests recorded</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Roster Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 class="font-extrabold text-slate-900 text-sm">Registered Aspirants Directory</h3>
+            <span class="text-xs text-slate-400">Click on any candidate to inspect their complete activity dossier</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-slate-100 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Student Info</th>
+                        <th class="py-3 px-4 text-center">Live Status</th>
+                        <th class="py-3 px-4 text-center">Last Active / Login</th>
+                        <th class="py-3 px-4 text-center">Device & IP</th>
+                        <th class="py-3 px-4 text-center">Tests Taken</th>
+                        <th class="py-3 px-4 text-center">Best Score</th>
+                        <th class="py-3 px-4 text-center">Avg Accuracy</th>
+                        <th class="py-3 px-4 text-right">Dossier</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for s in students %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <!-- Student Info -->
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {{ s.full_name[0] }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900">{{ s.full_name }}</div>
+                                    <div class="text-[10px] text-slate-400">@{{ s.username }} &bull; {{ s.email }}</div>
+                                    {% if s.phone %}
+                                    <div class="text-[10px] text-slate-500"><i class="fa-solid fa-phone text-[9px] mr-0.5"></i> {{ s.phone }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Live Status Badge -->
+                        <td class="py-3.5 px-4 text-center">
+                            {% if s.is_online_now %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-300">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Online Now</span>
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    <span>Offline</span>
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Last Active / Login -->
+                        <td class="py-3.5 px-4 text-center text-slate-600">
+                            {% if s.last_active_at %}
+                                <div class="font-bold text-slate-800">{{ s.last_active_at|datetimeformat }}</div>
+                                <div class="text-[10px] text-slate-400">Login: {{ s.last_login|datetimeformat }}</div>
+                            {% else %}
+                                <span class="text-slate-400">Never</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Device & IP -->
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="font-bold text-slate-800 block text-[11px]">{{ s.device_type or 'Desktop' }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">{{ s.ip_address or '127.0.0.1' }}</span>
+                        </td>
+
+                        <!-- Tests Taken -->
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="font-bold text-blue-700 text-xs">{{ s.tests_completed }} Mocks</span>
+                            {% if s.typing_completed > 0 %}
+                            <div class="text-[10px] text-emerald-600 font-semibold">{{ s.typing_completed }} Typing</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Best Score -->
+                        <td class="py-3.5 px-4 text-center font-extrabold text-slate-900 text-xs">
+                            {{ s.best_score }}
+                        </td>
+
+                        <!-- Accuracy -->
+                        <td class="py-3.5 px-4 text-center font-bold text-emerald-600 text-xs">
+                            {{ s.avg_accuracy|round(1) }}%
+                        </td>
+
+                        <!-- Action Link -->
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="{{ url_for('admin_student_detail', student_id=s.id) }}" class="px-3 py-1.5 bg-slate-900 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors inline-flex items-center gap-1 shadow-sm">
+                                <span>Inspect Full Activity</span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

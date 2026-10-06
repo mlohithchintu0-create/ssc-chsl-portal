@@ -204,5 +204,18 @@ class TestSSCCHSLPortal(unittest.TestCase):
         self.assertEqual(add_res.status_code, 200)
         self.assertIn(b"New question successfully added", add_res.data)
 
+    def test_08_admin_student_monitoring(self):
+        # Demo login as admin
+        self.client.get('/demo-login/admin', follow_redirects=True)
+
+        res = self.client.get('/admin/students')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Student Monitoring", res.data)
+
+        # Inspect student id=2
+        res2 = self.client.get('/admin/students/2')
+        self.assertEqual(res2.status_code, 200)
+        self.assertIn(b"Student Activity Dossier", res2.data)
+
 if __name__ == '__main__':
     unittest.main()

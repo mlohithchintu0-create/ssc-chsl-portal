@@ -66,14 +66,68 @@ def inject_user_and_subjects():
         'current_year': 2026
     }
 
+def get_client_ip():
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
+def get_device_type():
+    ua = (request.user_agent.string if request.user_agent else '').lower()
+    if 'mobile' in ua or 'android' in ua or 'iphone' in ua:
+        return 'Mobile'
+    elif 'tablet' in ua or 'ipad' in ua:
+        return 'Tablet'
+    return 'Desktop'
+
+def log_user_activity(user_id, action, details=None):
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        ip = get_client_ip()
+        ua = request.user_agent.string if request.user_agent else 'Unknown'
+        dev = get_device_type()
+        c.execute("""
+        INSERT INTO user_activity_logs (user_id, action, details, ip_address, user_agent, device_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """, (user_id, action, details, ip, ua, dev))
+        c.execute("""
+        UPDATE users 
+        SET last_active_at = CURRENT_TIMESTAMP, ip_address = ?, user_agent = ?, device_type = ?
+        WHERE id = ?
+        """, (ip, ua, dev, user_id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+
+@app.before_request
+def track_active_user():
+    if 'user_id' in session:
+        try:
+            conn = get_db()
+            c = conn.cursor()
+            ip = get_client_ip()
+            dev = get_device_type()
+            c.execute("""
+            UPDATE users 
+            SET last_active_at = CURRENT_TIMESTAMP, ip_address = ?, device_type = ?
+            WHERE id = ?
+            """, (ip, dev, session['user_id']))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+
 # =========================================================================
-# AUTHENTICATION
+# SEPARATE AUTHENTICATION: STUDENT & ADMIN
 # =========================================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    portal = request.args.get('portal', 'student')
     if request.method == 'POST':
         identifier = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
+        target_role = request.form.get('target_role', 'user')
 
         conn = get_db()
         c = conn.cursor()
@@ -81,6 +135,12 @@ def login():
         user = c.fetchone()
 
         if user and check_password_hash(user['password_hash'], password):
+            # If user selected Admin portal, strictly require admin role
+            if target_role == 'admin' and user['role'] != 'admin':
+                conn.close()
+                flash('Access Denied: You do not possess Administrator credentials. Please log in through the Student Portal.', 'danger')
+                return render_template('login.html', active_tab='admin')
+
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
@@ -93,20 +153,80 @@ def login():
             if last_login and not last_login.startswith(today):
                 new_streak += 1
 
-            c.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP, streak = ? WHERE id = ?", (new_streak, user['id']))
+            ip = get_client_ip()
+            dev = get_device_type()
+            ua = request.user_agent.string if request.user_agent else 'Unknown'
+
+            c.execute("""
+            UPDATE users 
+            SET last_login = CURRENT_TIMESTAMP, last_active_at = CURRENT_TIMESTAMP, 
+                streak = ?, ip_address = ?, user_agent = ?, device_type = ? 
+            WHERE id = ?
+            """, (new_streak, ip, ua, dev, user['id']))
             conn.commit()
             conn.close()
+
+            log_user_activity(user['id'], "Logged In", f"Logged in via {dev} ({portal.capitalize()} Portal) from IP {ip}")
 
             flash(f"Welcome back, {user['full_name']}!", 'success')
             next_url = request.args.get('next')
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect(url_for('dashboard') if user['role'] == 'user' else url_for('admin_dashboard'))
+            return redirect(url_for('admin_dashboard') if user['role'] == 'admin' else url_for('dashboard'))
         else:
             conn.close()
             flash('Invalid username/email or password.', 'danger')
 
-    return render_template('login.html')
+    return render_template('login.html', active_tab=portal)
+
+@app.route('/student/login')
+def student_login():
+    return redirect(url_for('login', portal='student'))
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        identifier = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE (username = ? OR email = ?)", (identifier, identifier))
+        user = c.fetchone()
+
+        if user and check_password_hash(user['password_hash'], password):
+            if user['role'] != 'admin':
+                conn.close()
+                flash('Access Denied: Only designated administrators can log in here.', 'danger')
+                return render_template('admin/login.html')
+
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = 'admin'
+            session['full_name'] = user['full_name']
+
+            ip = get_client_ip()
+            dev = get_device_type()
+            ua = request.user_agent.string if request.user_agent else 'Unknown'
+
+            c.execute("""
+            UPDATE users 
+            SET last_login = CURRENT_TIMESTAMP, last_active_at = CURRENT_TIMESTAMP,
+                ip_address = ?, user_agent = ?, device_type = ? 
+            WHERE id = ?
+            """, (ip, ua, dev, user['id']))
+            conn.commit()
+            conn.close()
+
+            log_user_activity(user['id'], "Admin Portal Access", f"Authenticated to Administration Panel from IP {ip} ({dev})")
+
+            flash('Welcome Administrator. System monitoring is active.', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            conn.close()
+            flash('Invalid administrative username or password.', 'danger')
+
+    return render_template('admin/login.html')
 
 @app.route('/demo-login/<role>')
 def demo_login(role):
@@ -124,6 +244,7 @@ def demo_login(role):
         session['username'] = user['username']
         session['role'] = user['role']
         session['full_name'] = user['full_name']
+        log_user_activity(user['id'], f"Demo Login ({user['role'].upper()})", f"Logged in from {get_device_type()}")
         flash(f"Logged in as {user['full_name']} ({user['role'].upper()})", 'info')
         return redirect(url_for('admin_dashboard') if user['role'] == 'admin' else url_for('dashboard'))
     flash('Demo user not found.', 'danger')
@@ -135,10 +256,11 @@ def register():
         full_name = request.form.get('full_name', '').strip()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
         password = request.form.get('password', '').strip()
 
         if not (full_name and username and email and password):
-            flash('All fields are required.', 'danger')
+            flash('Full name, username, email, and password are required.', 'danger')
             return render_template('register.html')
 
         conn = get_db()
@@ -150,10 +272,14 @@ def register():
             return render_template('register.html')
 
         pw_hash = generate_password_hash(password)
+        ip = get_client_ip()
+        dev = get_device_type()
+        ua = request.user_agent.string if request.user_agent else 'Unknown'
+
         c.execute("""
-        INSERT INTO users (username, email, password_hash, role, full_name, streak, last_login)
-        VALUES (?, ?, ?, 'user', ?, 1, CURRENT_TIMESTAMP)
-        """, (username, email, pw_hash, full_name))
+        INSERT INTO users (username, email, phone, password_hash, role, full_name, streak, ip_address, user_agent, device_type, last_login, last_active_at)
+        VALUES (?, ?, ?, ?, 'user', ?, 1, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """, (username, email, phone, pw_hash, full_name, ip, ua, dev))
         conn.commit()
         new_id = c.lastrowid
         conn.close()
@@ -163,13 +289,17 @@ def register():
         session['role'] = 'user'
         session['full_name'] = full_name
 
-        flash('Registration successful! Welcome to SSC CHSL Portal.', 'success')
+        log_user_activity(new_id, "Account Created & Registered", f"New aspirant registered from {ip} ({dev})")
+
+        flash('Registration successful! Welcome to the SSC CHSL Preparation Portal.', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
+    if 'user_id' in session:
+        log_user_activity(session['user_id'], "Logged Out", "Candidate ended session")
     session.clear()
     flash('You have been logged out safely.', 'info')
     return redirect(url_for('index'))
@@ -432,6 +562,8 @@ def api_typing_submit():
     conn.commit()
     conn.close()
 
+    log_user_activity(session['user_id'], "Completed Typing Test", f"Net: {net_wpm} WPM, Acc: {accuracy}%, Result: {'QUALIFIED' if passed else 'NOT QUALIFIED'}")
+
     return jsonify({
         'success': True,
         'net_wpm': net_wpm,
@@ -536,6 +668,8 @@ def start_mock_test(mock_test_id):
     conn.commit()
     conn.close()
 
+    log_user_activity(user_id, "Started Mock Test", f"Started '{mock['title']}' ({mock['tier']})")
+
     return redirect(url_for('exam_room', attempt_id=attempt_id))
 
 @app.route('/test/exam/<int:attempt_id>')
@@ -634,7 +768,7 @@ def submit_mock_test(attempt_id):
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT ta.*, mt.marks_per_question, mt.negative_marks FROM test_attempts ta JOIN mock_tests mt ON ta.mock_test_id = mt.id WHERE ta.id = ? AND ta.user_id = ?", (attempt_id, user_id))
+    c.execute("SELECT ta.*, mt.title, mt.marks_per_question, mt.negative_marks FROM test_attempts ta JOIN mock_tests mt ON ta.mock_test_id = mt.id WHERE ta.id = ? AND ta.user_id = ?", (attempt_id, user_id))
     attempt = c.fetchone()
 
     if not attempt or attempt['status'] == 'completed':
@@ -695,6 +829,8 @@ def submit_mock_test(attempt_id):
 
     conn.commit()
     conn.close()
+
+    log_user_activity(user_id, "Submitted Mock Test", f"Finished '{attempt['title']}' with Score: {final_score}/{attempt['max_marks']} ({accuracy}% accuracy)")
 
     flash('Test submitted successfully! Here is your detailed scorecard.', 'success')
     return redirect(url_for('test_result', attempt_id=attempt_id))
@@ -979,7 +1115,7 @@ def api_report_question():
     return jsonify({'success': True, 'message': 'Thank you! Your feedback has been sent to our faculty for review.'})
 
 # =========================================================================
-# ADMIN PANEL
+# ADMIN PANEL & STUDENT MONITORING
 # =========================================================================
 @app.route('/admin')
 @login_required(role='admin')
@@ -993,7 +1129,7 @@ def admin_dashboard():
     c.execute("SELECT COUNT(*) FROM mock_tests")
     total_mocks = c.fetchone()[0]
 
-    c.execute("SELECT COUNT(*) FROM users")
+    c.execute("SELECT COUNT(*) FROM users WHERE role = 'user'")
     total_users = c.fetchone()[0]
 
     c.execute("SELECT COUNT(*) FROM test_attempts WHERE status = 'completed'")
@@ -1002,6 +1138,24 @@ def admin_dashboard():
     c.execute("SELECT COUNT(*) FROM question_reports WHERE status = 'pending'")
     pending_reports = c.fetchone()[0]
 
+    # Count online students (active in the last 15 minutes)
+    c.execute("""
+    SELECT COUNT(*) FROM users 
+    WHERE role = 'user' AND last_active_at >= datetime('now', '-15 minutes')
+    """)
+    online_count = c.fetchone()[0]
+
+    # Real-Time Student Activity Stream
+    c.execute("""
+    SELECT al.*, u.full_name, u.username, u.email
+    FROM user_activity_logs al
+    JOIN users u ON al.user_id = u.id
+    ORDER BY al.created_at DESC
+    LIMIT 20
+    """)
+    recent_activities = c.fetchall()
+
+    # Recent Mock Attempts
     c.execute("""
     SELECT ta.*, u.full_name, mt.title as test_title
     FROM test_attempts ta
@@ -1020,7 +1174,106 @@ def admin_dashboard():
                            total_users=total_users,
                            total_attempts=total_attempts,
                            pending_reports=pending_reports,
+                           online_count=online_count,
+                           recent_activities=recent_activities,
                            recent_attempts=recent_attempts)
+
+@app.route('/admin/students')
+@login_required(role='admin')
+def admin_students():
+    search = request.args.get('q', '').strip()
+    conn = get_db()
+    c = conn.cursor()
+
+    query = """
+    SELECT 
+        u.*,
+        COUNT(DISTINCT ta.id) as tests_completed,
+        COALESCE(MAX(ta.final_score), 0.0) as best_score,
+        COALESCE(AVG(ta.accuracy), 0.0) as avg_accuracy,
+        COUNT(DISTINCT tya.id) as typing_completed,
+        CASE 
+            WHEN u.last_active_at >= datetime('now', '-15 minutes') THEN 1
+            ELSE 0
+        END as is_online_now
+    FROM users u
+    LEFT JOIN test_attempts ta ON u.id = ta.user_id AND ta.status = 'completed'
+    LEFT JOIN typing_attempts tya ON u.id = tya.user_id
+    WHERE u.role = 'user'
+    """
+    params = []
+    if search:
+        query += " AND (u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)"
+        params.extend([f"%{search}%", f"%{search}%", f"%{search}%", f"%{search}%"])
+
+    query += " GROUP BY u.id ORDER BY is_online_now DESC, u.last_active_at DESC"
+
+    c.execute(query, params)
+    students = c.fetchall()
+    conn.close()
+
+    return render_template('admin/students.html', students=students, search=search)
+
+@app.route('/admin/students/<int:student_id>')
+@login_required(role='admin')
+def admin_student_detail(student_id):
+    conn = get_db()
+    c = conn.cursor()
+
+    # Student metadata
+    c.execute("""
+    SELECT 
+        u.*,
+        CASE 
+            WHEN u.last_active_at >= datetime('now', '-15 minutes') THEN 1
+            ELSE 0
+        END as is_online_now
+    FROM users u 
+    WHERE u.id = ? AND u.role = 'user'
+    """, (student_id,))
+    student = c.fetchone()
+
+    if not student:
+        conn.close()
+        flash('Student record not found.', 'danger')
+        return redirect(url_for('admin_students'))
+
+    # All Mock Test Attempts
+    c.execute("""
+    SELECT ta.*, mt.title as test_title, mt.tier
+    FROM test_attempts ta
+    JOIN mock_tests mt ON ta.mock_test_id = mt.id
+    WHERE ta.user_id = ?
+    ORDER BY ta.start_time DESC
+    """, (student_id,))
+    attempts = c.fetchall()
+
+    # All Typing Attempts
+    c.execute("""
+    SELECT tya.*, tt.title as passage_title
+    FROM typing_attempts tya
+    JOIN typing_tests tt ON tya.test_id = tt.id
+    WHERE tya.user_id = ?
+    ORDER BY tya.completed_at DESC
+    """, (student_id,))
+    typing_records = c.fetchall()
+
+    # Chronological Audit Activity Log
+    c.execute("""
+    SELECT * FROM user_activity_logs
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT 50
+    """, (student_id,))
+    activity_logs = c.fetchall()
+
+    conn.close()
+
+    return render_template('admin/student_detail.html',
+                           student=student,
+                           attempts=attempts,
+                           typing_records=typing_records,
+                           activity_logs=activity_logs)
 
 @app.route('/admin/questions')
 @login_required(role='admin')
