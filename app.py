@@ -386,6 +386,70 @@ def mock_tests():
     conn.close()
     return render_template('mock_tests.html', mocks=mocks, selected_tier=tier)
 
+@app.route('/model-papers')
+def model_papers():
+    tier = request.args.get('tier', 'all')
+    conn = get_db()
+    c = conn.cursor()
+
+    if tier in ('Tier-I', 'Tier-II'):
+        c.execute("""
+        SELECT * FROM mock_tests 
+        WHERE (paper_type = 'model_paper' OR title LIKE '%Model Paper%') 
+          AND tier = ? AND is_published = 1 
+        ORDER BY id ASC
+        """, (tier,))
+    else:
+        c.execute("""
+        SELECT * FROM mock_tests 
+        WHERE (paper_type = 'model_paper' OR title LIKE '%Model Paper%') 
+          AND is_published = 1 
+        ORDER BY tier ASC, id ASC
+        """)
+    papers = c.fetchall()
+
+    c.execute("SELECT COUNT(*) FROM questions WHERE is_active = 1")
+    total_q = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM mock_tests WHERE tier = 'Tier-I' AND (paper_type = 'model_paper' OR title LIKE '%Model Paper%')")
+    tier1_count = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM mock_tests WHERE tier = 'Tier-II' AND (paper_type = 'model_paper' OR title LIKE '%Model Paper%')")
+    tier2_count = c.fetchone()[0]
+
+    conn.close()
+    return render_template('model_papers.html',
+                           papers=papers,
+                           selected_tier=tier,
+                           total_q=total_q,
+                           tier1_count=tier1_count,
+                           tier2_count=tier2_count)
+
+@app.route('/model-paper/<int:paper_id>/solutions')
+def model_paper_solutions(paper_id):
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM mock_tests WHERE id = ? AND is_published = 1", (paper_id,))
+    paper = c.fetchone()
+    if not paper:
+        conn.close()
+        flash('Model paper not found.', 'danger')
+        return redirect(url_for('model_papers'))
+
+    c.execute("""
+    SELECT q.*, s.name as subject_name, s.code as subject_code, mtq.section_name, mtq.order_num
+    FROM mock_test_questions mtq
+    JOIN questions q ON mtq.question_id = q.id
+    JOIN subjects s ON q.subject_id = s.id
+    WHERE mtq.mock_test_id = ?
+    ORDER BY mtq.order_num ASC
+    """, (paper_id,))
+    questions = c.fetchall()
+    conn.close()
+
+    return render_template('model_paper_solutions.html', paper=paper, questions=questions)
+
 @app.route('/practice')
 def practice():
     selected_subject = request.args.get('subject', 'all')

@@ -118,6 +118,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         tier TEXT NOT NULL, -- 'Tier-I' or 'Tier-II'
+        paper_type TEXT DEFAULT 'model_paper', -- 'model_paper', 'mock_test', 'pyq'
         total_questions INTEGER NOT NULL,
         duration_minutes INTEGER NOT NULL,
         total_marks REAL NOT NULL,
@@ -128,6 +129,10 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    existing_mock_cols = [row[1] for row in cursor.execute("PRAGMA table_info(mock_tests)").fetchall()]
+    if 'paper_type' not in existing_mock_cols:
+        cursor.execute("ALTER TABLE mock_tests ADD COLUMN paper_type TEXT DEFAULT 'model_paper'")
 
     # 6. Mock Test Questions Mapping
     cursor.execute("""

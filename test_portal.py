@@ -14,22 +14,26 @@ class TestSSCCHSLPortal(unittest.TestCase):
         conn = get_db()
         c = conn.cursor()
         
-        # Check mock tests
+        # Check mock tests and model papers
         c.execute("SELECT id, title, tier, total_questions FROM mock_tests")
         mocks = c.fetchall()
-        self.assertEqual(len(mocks), 2)
+        self.assertGreaterEqual(len(mocks), 8)
         
-        # Tier-I mock must have exactly 100 questions
-        tier1_mock = next(m for m in mocks if m['tier'] == 'Tier-I')
-        self.assertEqual(tier1_mock['total_questions'], 100)
-        c.execute("SELECT COUNT(*) FROM mock_test_questions WHERE mock_test_id = ?", (tier1_mock['id'],))
-        self.assertEqual(c.fetchone()[0], 100)
+        # Tier-I mocks must have exactly 100 questions
+        tier1_mocks = [m for m in mocks if m['tier'] == 'Tier-I']
+        self.assertGreaterEqual(len(tier1_mocks), 5)
+        for t1 in tier1_mocks:
+            self.assertEqual(t1['total_questions'], 100)
+            c.execute("SELECT COUNT(*) FROM mock_test_questions WHERE mock_test_id = ?", (t1['id'],))
+            self.assertEqual(c.fetchone()[0], 100)
 
-        # Tier-II mock must have exactly 135 questions
-        tier2_mock = next(m for m in mocks if m['tier'] == 'Tier-II')
-        self.assertEqual(tier2_mock['total_questions'], 135)
-        c.execute("SELECT COUNT(*) FROM mock_test_questions WHERE mock_test_id = ?", (tier2_mock['id'],))
-        self.assertEqual(c.fetchone()[0], 135)
+        # Tier-II mocks must have exactly 135 questions
+        tier2_mocks = [m for m in mocks if m['tier'] == 'Tier-II']
+        self.assertGreaterEqual(len(tier2_mocks), 3)
+        for t2 in tier2_mocks:
+            self.assertEqual(t2['total_questions'], 135)
+            c.execute("SELECT COUNT(*) FROM mock_test_questions WHERE mock_test_id = ?", (t2['id'],))
+            self.assertEqual(c.fetchone()[0], 135)
 
         # Check typing tests
         c.execute("SELECT COUNT(*) FROM typing_tests")
@@ -46,6 +50,8 @@ class TestSSCCHSLPortal(unittest.TestCase):
             '/tier1',
             '/tier2',
             '/mock-tests',
+            '/model-papers',
+            '/model-paper/5/solutions',
             '/practice',
             '/daily-quiz',
             '/computer-test',

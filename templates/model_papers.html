@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}SSC CHSL Model Papers - Tier-I (100 Qs) & Tier-II (135 Qs) Full Length Papers{% endblock %}
+
+{% block content %}
+<!-- Header Banner -->
+<div class="bg-gradient-to-r from-ssc-900 via-blue-900 to-indigo-900 text-white py-10 border-b border-blue-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold border border-amber-400/30 mb-3">
+                    <i class="fa-solid fa-file-signature"></i> 2026 Official Pattern Model Question Papers
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight">SSC CHSL Official Model Papers</h1>
+                <p class="text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+                    Practice with authentic full-length model test papers crafted strictly according to the latest Staff Selection Commission syllabus and TCS exam pattern.
+                </p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15 text-center">
+                    <div class="text-xl font-extrabold text-amber-400">{{ tier1_count }}</div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Tier-I Papers</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15 text-center">
+                    <div class="text-xl font-extrabold text-purple-300">{{ tier2_count }}</div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Tier-II Papers</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15 text-center">
+                    <div class="text-xl font-extrabold text-emerald-300">{{ total_q }}</div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Total Questions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Controls Bar -->
+<div class="bg-white border-b border-slate-200 sticky top-16 z-20 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <!-- Filter Tabs -->
+        <div class="flex items-center space-x-1.5 bg-slate-100 p-1.5 rounded-xl text-xs font-bold">
+            <a href="{{ url_for('model_papers', tier='all') }}" 
+               class="px-4 py-2 rounded-lg transition-all {% if selected_tier == 'all' %}bg-white shadow text-blue-700{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                All Model Papers ({{ papers|length }})
+            </a>
+            <a href="{{ url_for('model_papers', tier='Tier-I') }}" 
+               class="px-4 py-2 rounded-lg transition-all {% if selected_tier == 'Tier-I' %}bg-white shadow text-blue-700{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                Tier-I Model Papers (100 Qs)
+            </a>
+            <a href="{{ url_for('model_papers', tier='Tier-II') }}" 
+               class="px-4 py-2 rounded-lg transition-all {% if selected_tier == 'Tier-II' %}bg-white shadow text-purple-700{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                Tier-II Model Papers (135 Qs)
+            </a>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('typing_test_home') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-keyboard text-amber-500"></i> Typing Test (35 WPM)
+            </a>
+            <a href="{{ url_for('practice') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-layer-group text-blue-600"></i> Topic Practice
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Cards Grid -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {% for p in papers %}
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden">
+            <!-- Card Top Header -->
+            <div class="p-6 sm:p-8 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {% if p.tier == 'Tier-I' %}bg-blue-50 text-blue-700 border border-blue-200{% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+                        <i class="fa-solid {% if p.tier == 'Tier-I' %}fa-file-lines{% else %}fa-cube{% endif %} mr-1"></i>
+                        {{ p.tier }} Official Model Paper
+                    </span>
+                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-regular fa-clock text-slate-400"></i> {{ p.duration_minutes }} Mins
+                    </span>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {{ p.title }}
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100 whitespace-pre-line">
+                        {{ p.instructions }}
+                    </p>
+                </div>
+
+                <!-- Exam Metrics Specs Grid -->
+                <div class="grid grid-cols-4 gap-2 text-center text-xs pt-2">
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Questions</span>
+                        <span class="font-extrabold text-slate-900 text-sm">{{ p.total_questions }} Qs</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Duration</span>
+                        <span class="font-extrabold text-slate-900 text-sm">{{ p.duration_minutes }}m</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Max Marks</span>
+                        <span class="font-extrabold text-slate-900 text-sm">{{ p.total_marks|int }}</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Negative</span>
+                        <span class="font-extrabold text-rose-600 text-sm">-{{ p.negative_marks }}</span>
+                    </div>
+                </div>
+
+                <!-- Subject Breakdown Pills -->
+                <div class="text-[11px] text-slate-600 pt-1 flex flex-wrap items-center gap-1.5">
+                    {% if p.tier == 'Tier-I' %}
+                    <span class="bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg font-bold border border-blue-100">English (25 Qs)</span>
+                    <span class="bg-indigo-50 text-indigo-800 px-2.5 py-1 rounded-lg font-bold border border-indigo-100">Reasoning (25 Qs)</span>
+                    <span class="bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg font-bold border border-amber-100">Quant (25 Qs)</span>
+                    <span class="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg font-bold border border-emerald-100">GA (25 Qs)</span>
+                    {% else %}
+                    <span class="bg-purple-50 text-purple-800 px-2.5 py-1 rounded-lg font-bold border border-purple-100">Sec-I Math &amp; Reasoning (60 Qs)</span>
+                    <span class="bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg font-bold border border-blue-100">Sec-II English &amp; GA (60 Qs)</span>
+                    <span class="bg-teal-50 text-teal-800 px-2.5 py-1 rounded-lg font-bold border border-teal-100">Sec-III Computer (15 Qs)</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="p-6 sm:p-8 pt-4 border-t border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <a href="{{ url_for('model_paper_solutions', paper_id=p.id) }}" 
+                   class="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-list-check text-slate-500"></i>
+                    <span>View Questions &amp; Solutions</span>
+                </a>
+
+                <a href="{{ url_for('start_mock_test', mock_test_id=p.id) }}" 
+                   class="w-full sm:w-auto px-6 py-2.5 {% if p.tier == 'Tier-I' %}bg-blue-600 hover:bg-blue-700{% else %}bg-purple-600 hover:bg-purple-700{% endif %} text-white rounded-xl text-xs font-bold shadow-md transition-all text-center flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Attempt CBT Simulation</span>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

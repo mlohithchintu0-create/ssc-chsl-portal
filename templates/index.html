@@ -23,17 +23,21 @@
 
                 <!-- Core CTA Action Buttons -->
                 <div class="flex flex-wrap gap-3 pt-2">
-                    <a href="{{ url_for('tier1') }}" class="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-sm shadow-lg shadow-amber-400/20 transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-play"></i>
-                        <span>Start Tier-I (100 Qs Mock)</span>
+                    <a href="{{ url_for('model_papers') }}" class="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-sm shadow-lg shadow-amber-400/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>SSC CHSL Model Papers</span>
                     </a>
-                    <a href="{{ url_for('tier2') }}" class="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-extrabold text-sm border border-white/30 transition-all flex items-center gap-2">
+                    <a href="{{ url_for('tier1') }}" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-extrabold text-sm border border-white/30 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Tier-I (100 Qs)</span>
+                    </a>
+                    <a href="{{ url_for('tier2') }}" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-extrabold text-sm border border-white/30 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-layer-group"></i>
-                        <span>Explore Tier-II (135 Qs)</span>
+                        <span>Tier-II (135 Qs)</span>
                     </a>
                     <a href="{{ url_for('typing_test_home') }}" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-md transition-all flex items-center gap-2">
                         <i class="fa-solid fa-keyboard"></i>
-                        <span>Practice Typing Test</span>
+                        <span>Typing Test</span>
                     </a>
                 </div>
 
@@ -191,6 +195,26 @@
             </div>
             <div class="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs font-bold text-amber-600">
                 <span>Play Today's Quiz</span>
+                <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+        </a>
+
+        <!-- Card: SSC CHSL Model Papers -->
+        <a href="{{ url_for('model_papers') }}" class="bg-gradient-to-br from-amber-500/10 via-white to-blue-50/30 rounded-2xl p-6 border-2 border-amber-300 shadow-sm hover:shadow-lg hover:border-amber-400 transition-all group flex flex-col justify-between relative overflow-hidden">
+            <span class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase tracking-wider">
+                New 2026 Papers
+            </span>
+            <div>
+                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <h3 class="font-extrabold text-slate-900 group-hover:text-amber-600 transition-colors">SSC CHSL Model Papers</h3>
+                <p class="text-xs text-slate-600 leading-relaxed mt-2">
+                    Tier-I (100 Qs) and Tier-II (135 Qs) complete model question papers with official scoring, detailed solutions, and shortcuts.
+                </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-amber-100 flex items-center text-xs font-bold text-amber-700">
+                <span>Attempt Model Papers</span>
                 <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
             </div>
         </a>

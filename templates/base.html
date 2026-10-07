@@ -89,6 +89,9 @@
                         <span class="flex items-center gap-1">Tier-II <span class="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded font-bold">135 Qs</span></span>
                     </a>
                     <a href="{{ url_for('mock_tests') }}" class="px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors {% if request.endpoint == 'mock_tests' %}text-blue-700 bg-blue-50{% endif %}">Mock Tests</a>
+                    <a href="{{ url_for('model_papers') }}" class="px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors {% if request.endpoint == 'model_papers' or request.endpoint == 'model_paper_solutions' %}text-blue-700 bg-blue-50 font-bold{% endif %}">
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-file-signature text-amber-500"></i> Model Papers</span>
+                    </a>
                     <a href="{{ url_for('practice') }}" class="px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors {% if request.endpoint == 'practice' %}text-blue-700 bg-blue-50{% endif %}">Practice</a>
                     <a href="{{ url_for('daily_quiz') }}" class="px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors {% if request.endpoint == 'daily_quiz' %}text-blue-700 bg-blue-50{% endif %}">
                         <span class="flex items-center gap-1 text-amber-600"><i class="fa-solid fa-fire text-xs"></i> Daily Quiz</span>
@@ -176,6 +179,9 @@
             <a href="{{ url_for('tier1') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50">Tier-I (100 Questions)</a>
             <a href="{{ url_for('tier2') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50">Tier-II (135 Questions)</a>
             <a href="{{ url_for('mock_tests') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50">Mock Tests</a>
+            <a href="{{ url_for('model_papers') }}" class="block px-3 py-2 text-sm font-bold rounded-lg text-blue-700 bg-blue-50/50 hover:bg-blue-50">
+                <i class="fa-solid fa-file-signature text-amber-500 mr-1.5"></i> Model Papers (Tier-I &amp; Tier-II)
+            </a>
             <a href="{{ url_for('practice') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50">Practice Arena</a>
             <a href="{{ url_for('daily_quiz') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-amber-600 hover:bg-amber-50">Daily Challenge Quiz</a>
             <a href="{{ url_for('computer_test') }}" class="block px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50">Computer Knowledge Test</a>
